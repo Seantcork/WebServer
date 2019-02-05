@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
+using namespace std;
 
 
 // creates and binds a server socket
@@ -51,18 +52,18 @@ int main(int argc, char** argv) {
         std::cout << "jads;lfjkasd" << std::endl;
     }
     
-    printf("HEllo WORKDLD 1 ");
+    cout << "HEllo WORKDLD 1 " << endl;
 
     // START LISTENING LOOP FOR ACCEPT
 
     while (1) {
-        printf("HEllo WORKDLD 2 ");
+      cout << "HEllo WORKDLD 2 " << endl;
 
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
-        printf("HEllo WORKDLD 3 ");
+        cout << "HEllo WORKDLD 3 " << endl;
 
         if (new_sock < 0) {
-            printf("error on accept!\n");
+          cout << "error on accept!\n" << endl;
             return -1;
         }
         
