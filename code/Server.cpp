@@ -11,9 +11,16 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <iostream>
+
 
 // creates and binds a server socket
 int main(int argc, char** argv) {
+    
+    int new_sock;
+    struct sockaddr_in client_addr;
+    int clientlen = sizeof(client_addr);
     
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     
@@ -37,15 +44,25 @@ int main(int argc, char** argv) {
     
     printf("opened and bound socket!\n");
     
-    listen(sock_fd)
+    if (listen(sock_fd,5) < 0) {
+        perror("error on listen!/n");
+        return -1;
+    } else {
+        std::cout << "jads;lfjkasd" << std::endl;
+    }
     
+    printf("HEllo WORKDLD 1 ");
+
     // START LISTENING LOOP FOR ACCEPT
-    
+
     while (1) {
-        new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, &clientlen)
-        
+        printf("HEllo WORKDLD 2 ");
+
+        new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
+        printf("HEllo WORKDLD 3 ");
+
         if (new_sock < 0) {
-            printf("error on accept!\n")
+            printf("error on accept!\n");
             return -1;
         }
         
