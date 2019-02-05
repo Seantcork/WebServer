@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
         return -1;
     }
     
-    int portnum = 7979;
+    int portnum = 8081;
     
     struct sockaddr_in myaddr;
     myaddr.sin_family = AF_INET;
@@ -65,8 +65,6 @@ int main(int argc, char** argv) {
             printf("error on accept!\n");
             return -1;
         }
-        
-        
         
     }
     
