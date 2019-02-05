@@ -59,14 +59,11 @@ int main(int argc, char** argv) {
     while (1) {
       cout << "HEllo WORKDLD 2 " << endl;
 
-        new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
-        cout << "HEllo WORKDLD 3 " << endl;
-
-        if (new_sock < 0) {
-          cout << "error on accept!\n" << endl;
-            return -1;
-        }
-        
+      if( (new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen)) < 0){
+        cerr << "error accepting connectin" << endl;
+        return -1;
+      }
+      cout << "HEllo WORKDLD 3 " << endl;
         
         
     }
