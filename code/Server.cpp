@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
         
         pthread_t new_thread;
         int sock_handler = pthread_create( &new_thread, NULL, new_connection, (void*)new_sock );
-        
+
     }
     
     return 0;
