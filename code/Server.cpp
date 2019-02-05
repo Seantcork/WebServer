@@ -1,6 +1,6 @@
 //
 //  ServerProgram.cpp
-//  
+//
 //
 //  Created by Ian Squiers on 1/30/19.
 //
@@ -13,11 +13,51 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
+#include <pthread.h>
+
+
+
 using namespace std;
 
+void *new_connection(void *new_sock) {
+    
+    int sock = (uintptr_t)new_sock;
+    
+    char message[256] = {0};
+    int n = read(sock, message, 255);
+    if (n < 0) {
+        cout << "error on read!/n" << endl;
+    }
+    cout << "MESSAGE RECIEVED:" << message << endl;
+    
+    close(sock);
+}
 
 // creates and binds a server socket
 int main(int argc, char** argv) {
+    
+    int c;
+    int portnum, pflag, rflag = 0;
+    char *rootdir;
+    
+    while ((c = getopt (argc, argv, "p:r:")) != -1)
+        switch (c)
+    {
+        case 'p':
+            pflag = 1;
+            portnum = atoi(optarg);
+            break;
+        case 'r':
+            rflag = 1;
+            rootdir = optarg;
+            break;
+        case '?':
+            // err = 1;
+            break;
+    }
+    
+    // printf ("portnum = %d, rootdir = %s\n",portnum, rootdir);
+    
     
     int new_sock;
     struct sockaddr_in client_addr;
@@ -29,8 +69,6 @@ int main(int argc, char** argv) {
         printf("error opening socket\n");
         return -1;
     }
-    
-    int portnum = 8081;
     
     struct sockaddr_in myaddr;
     myaddr.sin_family = AF_INET;
@@ -53,22 +91,24 @@ int main(int argc, char** argv) {
     }
     
     cout << "HEllo WORKDLD 1 " << endl;
-
+    
     // START LISTENING LOOP FOR ACCEPT
-
+    
     while (1) {
-      cout << "HEllo WORKDLD 2 " << endl;
-
+        cout << "HEllo WORKDLD 2 " << endl;
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
         cout << "HEllo WORKDLD 3 " << endl;
-
         if (new_sock < 0) {
-          cout << "error on accept!\n" << endl;
+            cout << "error on accept!\n" << endl;
             return -1;
         }
+        
+        pthread_t new_thread;
+        int sock_handler = pthread_create( &new_thread, NULL, new_connection, (void*)new_sock );
         
     }
     
     return 0;
 }
+
 
