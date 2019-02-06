@@ -19,6 +19,8 @@
 
 using namespace std;
 
+char *generate_response
+
 void *new_connection(void *new_sock) {
     
     int sock = (uintptr_t)new_sock;
@@ -32,6 +34,8 @@ void *new_connection(void *new_sock) {
     
     close(sock);
 }
+
+void parse_message
 
 // creates and binds a server socket
 int main(int argc, char** argv) {
@@ -52,12 +56,9 @@ int main(int argc, char** argv) {
             rootdir = optarg;
             break;
         case '?':
-            // err = 1;
+            int err = 1;
             break;
     }
-    
-    // printf ("portnum = %d, rootdir = %s\n",portnum, rootdir);
-    
     
     int new_sock;
     struct sockaddr_in client_addr;
