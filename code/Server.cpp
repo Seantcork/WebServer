@@ -14,28 +14,60 @@
 #include <sys/types.h>
 #include <iostream>
 #include <pthread.h>
+#include <string.h>
+#include <chrono>
 
 
 
 using namespace std;
 
-char *generate_response
+
+void handle_request(char *msg){
+  cout << "in here" << endl;
+  int get = 0;
+  int http1 = 0;
+  int http11 = 0;
+  const char *request;
+  char response[40];
+  request = strtok(msg, " ");
+  while(request != NULL){
+    if(strcmp(request, "GET") == 0){
+      get = 1;
+    }
+    if(strcmp(request, "HTTP/1.0") == 0){
+      http1 = 1;
+    }
+    if(strcmp(request, "HTTP1.1") == 0){
+      http11 = 1;
+    }
+    request = strtok(NULL, " ");
+  }
+  if(get == 0){
+    cout << "in here" << endl;
+    strcat(response, "404 Bad Request");
+    cout << "after here" << endl;
+  }
+  cout << "in here3" << endl;
+  cout << response << endl;
+}
 
 void *new_connection(void *new_sock) {
     
     int sock = (uintptr_t)new_sock;
     
     char message[256] = {0};
+    //char newMessage;
     int n = read(sock, message, 255);
     if (n < 0) {
         cout << "error on read!/n" << endl;
     }
     cout << "MESSAGE RECIEVED:" << message << endl;
+    handle_request(message);
+    cout << "after request" << endl;
     
     close(sock);
 }
 
-void parse_message
 
 // creates and binds a server socket
 int main(int argc, char** argv) {
@@ -105,7 +137,7 @@ int main(int argc, char** argv) {
         }
         
         pthread_t new_thread;
-        int sock_handler = pthread_create( &new_thread, NULL, new_connection, (void*)new_sock );
+        pthread_create( &new_thread, NULL, new_connection, (void*)new_sock );
 
     }
     
