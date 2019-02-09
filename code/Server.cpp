@@ -8,15 +8,21 @@
 /*
  
  IMPLIMENTATION TODO:
- socket timeouts
- splitting up large messages
- default filepaths
- return messages
+     socket timeouts
+     splitting up large messages
+     default filepaths
+     check file permissions (can ifstream but unsuccessful read?)
+     how to return messages through socket
+     100 Continue (extra)
  
  COMPILE ISSUES:
     with -std=c++11 flag, can use static dec of map but breaks bind comparison
+    some issue printing strings with DEBUGPRINT
  
  KNOWN BUGS:
+ 
+ THOUGHTS:
+    Split into main.cpp, messagehandler.cpp, utils.cpp
  
  */
 
@@ -70,43 +76,62 @@ string filetype(string path) { //utils
 string get_date() { //utils
     time_t rawtime;
     struct tm * timeinfo;
-    char buffer[80];
+    char buffer[MAXREQ];
     
     time(&rawtime);
     timeinfo = localtime(&rawtime);
     
-    strftime(buffer,80,"Date: %a, %d %b %G %T %T\n",timeinfo);
+    strftime(buffer,MAXREQ,"Date: %a, %d %b %G %T %T\n",timeinfo);
     string tstring = buffer;
     return tstring;
 }
 
-string generate_response(string http_type /* <-- format as "HTTP/1.x" */, string filepath) {
-    
-    string status = http_type;
-    string ctype = "Content-Type: " + filetype(filepath) + "\n";
-    string clen = "Content-Length: ";
+string generate_response(string http_type, string filepath) {
+    string response;
+    string status;
+    string ctype;
+    string clen;
+    string date;
     
     ifstream file(filepath, std::ios::binary | std::ios::ate);
-    streamsize size = file.tellg();
+    if (file.fail()) {
+        //file does not exist 404
+        return "404 Not Found";
+    }
+    streamsize fsize = file.tellg();
     file.seekg(0, ios::beg);
     
-    std::vector<char> fdata(size);
-    if (file.read(fdata.data(), size))
-    {
-        string cat = string(fdata.data(), size);
-        string date = get_date();
-        string response = status + date + ctype + clen + "\n" + fdata.data();
-        cout << response;
+    DEBUG_PRINT("FILESIZE READ: %s", fsize);
+    
+    if (fsize > MAXURI) {
+        //handle splitting of response
     }
+    
+    std::vector<char> fdata(fsize);
+    if (file.read(fdata.data(), fsize)) //data successfully read
+    {
+        status = http_type +  " 200 OK";
+        date = get_date();
+        ctype = "Content-Type: " + filetype(filepath) + "\n";
+        clen = "Content-Length: " + to_string(fsize) + "\n";
+        response = status + date + ctype + clen + "\n" + fdata.data();
+        return response;
+    } else {
+        // unable to read (permissions)
+        return "403 Forbidden";
+    }
+    return "ERROR";
 }
 
 int handle_request(char *msg) {
     DEBUG_PRINT("handling request\n");
+    
     int get = 0, http1 = 0, http11 = 0, goodreq = 1;
-    const char *request;
-    char response[40];
+    string http_type;
+    string reply;
     
     // Parse request
+    const char *request;
     request = strtok(msg, " ");
     while(request != NULL){
         if(strcmp(request, "GET") == 0){
@@ -114,20 +139,26 @@ int handle_request(char *msg) {
         }
         if(strcmp(request, "HTTP/1.0") == 0){
             http1 = 1;
+            http_type = "HTTP/1.0";
         }
         if(strcmp(request, "HTTP/1.1") == 0){
             http11 = 1;
+            http_type = "HTTP/1.1";
         }
         request = strtok(NULL, " ");
     }
     
+    // TODO: GET THE FILEPATH FROM THE REQ
+    string filepath = "";
+    
     if(!get || !(http1 && http11)) { // if get is bad or neither http req
         goodreq = 0;
-        DEBUG_PRINT("404 error");
-        // WHAT DO WE DO HERE
+        reply = "404 Bad Request";
+    } else {
+        reply = generate_response(http_type, filepath);
     }
-    
-    
+                                         
+    // tell to close the socket or not
     if (http11 && goodreq) {
         return 1;
     } else {
