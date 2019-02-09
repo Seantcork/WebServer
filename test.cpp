@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -37,22 +38,38 @@ string get_date() {
     return tstring;
 }
 
+map<string, string> ftypes = {
+    { ".gif", "image/gif"  },
+    { ".jpg", "image/jpeg" },
+    { ".png", "image/png"  },
+    { ".txt", "text/plain" },
+    { ".html", "text/html" }
+};
+
+
 int main(int argc, char** argv) {
+    
+    string path = "index.htmls";
+    
+    string suffix = path.substr(path.find_last_of("."));
+    cout << "Filepath suffix:" << suffix << "\n";
+    string filetype = ftypes.find(suffix)->second;
+    cout << filetype.length() << "blah\n";
     
     //
     string http_type = "1.1";
     //
-    
+
     string status = "HTTP/" + http_type + " 200 OK\n";
     string ctype = "Content-Type:\n";
     string clen = "Content-Length:\n";
-    
+
     char filepath[] = "test.txt";
-    
+
     ifstream file(filepath, std::ios::binary | std::ios::ate);
     streamsize size = file.tellg();
     file.seekg(0, ios::beg);
-    
+
     std::vector<char> fdata(size);
     if (file.read(fdata.data(), size))
     {

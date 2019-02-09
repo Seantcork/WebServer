@@ -5,17 +5,30 @@
 //  Created by Ian Squiers on 1/30/19.
 //
 
+/*
+ TODO:
+ socket timeouts
+ splitting up large messages
+ default filepaths
+ 
+ */
+
 #include "Server.hpp"
+#include <time.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
 #include <pthread.h>
 #include <string.h>
 #include <chrono>
+#include <fstream>
+#include <sys/stat.h>
+#include <vector>
+#include <map>
 
 #define DEBUG_ME 1
 #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
@@ -23,11 +36,58 @@ printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 fflush(stdout);}
 
 const int MAXURI = 255;
-const int MAXREQ = 80; // RoT for this?
+const int MAXREQ = 80; // good RoT for this?
 
 using namespace std;
 
+static map<string, string> ftypes = { //utils
+    { ".gif", "image/gif"  },
+    { ".jpg", "image/jpeg" },
+    { ".png", "image/png"  },
+    { ".txt", "text/plain" },
+    { ".html", "text/html" }
+};
 
+string filetype(string path) { //utils
+    string suffix = path.substr(path.find_last_of("."));
+    DEBUG_PRINT("Filepath suffix: %s", suffix);
+    string filetype = ftypes.find(suffix)->second;
+    DEBUG_PRINT("Filetype Found: %s", filetype);
+    return filetype;
+}
+
+string get_date() { //utils
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+    
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    
+    strftime(buffer,80,"Date: %a, %d %b %G %T %T\n",timeinfo);
+    string tstring = buffer;
+    return tstring;
+}
+
+string generate_response(string http_type /* <-- format as "HTTP/1.x" */, string filepath) {
+    
+    string status = http_type;
+    string ctype = "Content-Type: " + filetype(filepath) + "\n";
+    string clen = "Content-Length: ";
+    
+    ifstream file(filepath, std::ios::binary | std::ios::ate);
+    streamsize size = file.tellg();
+    file.seekg(0, ios::beg);
+    
+    std::vector<char> fdata(size);
+    if (file.read(fdata.data(), size))
+    {
+        string cat = string(fdata.data(), size);
+        string date = get_date();
+        string response = status + date + ctype + clen + "\n" + fdata.data();
+        cout << response;
+    }
+}
 
 int handle_request(char *msg) {
     DEBUG_PRINT("handling request\n");
