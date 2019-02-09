@@ -6,10 +6,17 @@
 //
 
 /*
- TODO:
+ 
+ IMPLIMENTATION TODO:
  socket timeouts
  splitting up large messages
  default filepaths
+ return messages
+ 
+ COMPILE ISSUES:
+    with -std=c++11 flag, can use static dec of map but breaks bind comparison
+ 
+ KNOWN BUGS:
  
  */
 
@@ -40,19 +47,23 @@ const int MAXREQ = 80; // good RoT for this?
 
 using namespace std;
 
-static map<string, string> ftypes = { //utils
-    { ".gif", "image/gif"  },
-    { ".jpg", "image/jpeg" },
-    { ".png", "image/png"  },
-    { ".txt", "text/plain" },
-    { ".html", "text/html" }
-};
+//static map<string, string> ftypes = { //utils
+//    { ".gif", "image/gif"  },
+//    { ".jpg", "image/jpeg" },
+//    { ".png", "image/png"  },
+//    { ".txt", "text/plain" },
+//    { ".html", "text/html" }
+//};
+
+static map<string, string> ftypes;
 
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
-    DEBUG_PRINT("Filepath suffix: %s", suffix);
+    //DEBUG_PRINT("Filepath suffix: %s", suffix);
+    cout << suffix << endl;
     string filetype = ftypes.find(suffix)->second;
-    DEBUG_PRINT("Filetype Found: %s", filetype);
+    //DEBUG_PRINT("Filetype Found: %s", filetype);
+    cout << filetype << endl;
     return filetype;
 }
 
@@ -185,9 +196,10 @@ int main(int argc, char** argv) {
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     
     if (bind(sock_fd, (struct sockaddr*) &myaddr, sizeof(myaddr)) < 0) {
-        perror("error binding socket\n");
+        printf("error binding socket\n");
         return -1;
     }
+    
     DEBUG_PRINT("opened and bound socket!\n");
     
     if (listen(sock_fd,5) < 0) {
