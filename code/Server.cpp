@@ -85,6 +85,7 @@ string get_date() { //utils
 }
 
 char *generate_response(string http_type, string filepath) {
+    DEBUG_PRINT("GENERATING RESPONSE");
     string response;
     string status;
     string ctype;
@@ -94,6 +95,7 @@ char *generate_response(string http_type, string filepath) {
     ifstream file(filepath, std::ios::binary | std::ios::ate);
     if (file.fail()) {
         //file does not exist 404
+        DEBUG_PRINT("HERE");
         return (char*)"404 Not Found";
     }
     streamsize fsize = file.tellg();
@@ -150,12 +152,13 @@ int handle_request(char *msg, int socket) {
     }
     
     // TODO: GET THE FILEPATH FROM THE REQ
-    string filepath = "";
-    
+    string filepath = "test.txt";
+    DEBUG_PRINT("get: %d, h0: %d, h1 %d", get, http1, http11);
     if(!get || !(http1 || http11)) { // if get is bad or neither http req
         goodreq = 0;
         reply = (char*)"404 Bad Request\r";
     } else {
+        DEBUG_PRINT("Hello");
         reply = generate_response(http_type, filepath);
     }
     
