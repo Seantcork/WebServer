@@ -53,15 +53,13 @@ const int MAXREQ = 80; // good RoT for this?
 
 using namespace std;
 
-//static map<string, string> ftypes = { //utils
-//    { ".gif", "image/gif"  },
-//    { ".jpg", "image/jpeg" },
-//    { ".png", "image/png"  },
-//    { ".txt", "text/plain" },
-//    { ".html", "text/html" }
-//};
-
-static map<string, string> ftypes;
+static map<string, string> ftypes = { //utils
+    { ".gif", "image/gif"  },
+    { ".jpg", "image/jpeg" },
+    { ".png", "image/png"  },
+    { ".txt", "text/plain" },
+    { ".html", "text/html" }
+};
 
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
@@ -233,7 +231,7 @@ int main(int argc, char** argv) {
     myaddr.sin_port = htons(portnum);
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     
-    if (bind(sock_fd, (struct sockaddr*) &myaddr, sizeof(myaddr)) < 0) {
+    if (::bind(sock_fd, (struct sockaddr*) &myaddr, sizeof(myaddr)) < 0) {
         printf("error binding socket\n");
         return -1;
     }
