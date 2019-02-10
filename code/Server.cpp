@@ -20,6 +20,7 @@
 
     no guarentee that we will send everything with the just one send especially in HTtp1.1.
     need to determine how to do that.
+    Test to see if 403 works. Will edit file permisions and test it out.
      100 Continue (extra)
  
  COMPILE ISSUES:
