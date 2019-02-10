@@ -17,7 +17,9 @@
      	-meaning recving get messages that are pretty long. Need to think about how to do that.
      	-Idea would be to get to where the message header tells you how long the messaage is. and 
      	-call recv till you have that amount of messages.
-     check file permissions (can ifstream but unsuccessful read?)
+
+    no guarentee that we will send everything with the just one send especially in HTtp1.1.
+    need to determine how to do that.
      100 Continue (extra)
  
  COMPILE ISSUES:
@@ -181,7 +183,9 @@ int handle_request(char *msg, int socket) {
     } else {
         reply = generate_response(http_type, filepath);
     }
-    
+
+
+
     if(send(socket, reply, strlen(reply) ,0) == -1){
     	cerr << "ERROR sending socket" << endl;
     }
