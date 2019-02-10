@@ -152,9 +152,9 @@ int handle_request(char *msg, int socket) {
     // TODO: GET THE FILEPATH FROM THE REQ
     string filepath = "";
     
-    if(!get || !(http1 && http11)) { // if get is bad or neither http req
+    if(!get || !(http1 || http11)) { // if get is bad or neither http req
         goodreq = 0;
-        reply = (char*)"404 Bad Request";
+        reply = (char*)"404 Bad Request\r";
     } else {
         reply = generate_response(http_type, filepath);
     }
