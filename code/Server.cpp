@@ -40,6 +40,7 @@ void handle_request(char *msg){
       http11 = 1;
     }
     request = strtok(NULL, " ");
+    cout << request << endl;
   }
   if(get == 0){
     cout << "in here" << endl;
@@ -139,7 +140,10 @@ int main(int argc, char** argv) {
         }
         
         pthread_t new_thread;
-        pthread_create( &new_thread, NULL, new_connection, (void*)new_sock );
+        if( pthread_create( &new_thread, NULL, new_connection, (void*)new_sock ) < 0){
+        	cerr << "Thread Creation Failed" << endl;
+        	return -1;
+    	}
 
     }
     
