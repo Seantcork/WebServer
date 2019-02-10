@@ -18,6 +18,9 @@
      	-Idea would be to get to where the message header tells you how long the messaage is. and 
      	-call recv till you have that amount of messages.
 
+
+     Seting mutex when sending and writing data in HTTP/1.1
+
     no guarentee that we will send everything with the just one send especially in HTtp1.1.
     need to determine how to do that.
     Test to see if 403 works. Will edit file permisions and test it out.
@@ -72,7 +75,18 @@ static map<string, string> ftypes = { //utils
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
     cout << suffix << endl;
-    string filetype = ftypes.find(suffix)->second;
+    map<string, string>::iterator find;
+    find = ftypes.find(suffix);
+    string filetype;
+    if(find == ftypes.end()){
+    	filetype = "cant handle request";
+    }
+    else{
+    	filetype = find->second;
+
+    }
+
+
     cout << filetype << endl;
     return filetype;
 }
@@ -97,14 +111,19 @@ char *generate_response(string http_type, string filepath) {
     string ctype;
     string clen;
     string date;
+    string type_of_file = filetype(filepath);
     
+
+    if(type_of_file.compare("cant handle request") == 0){
+        	return (char*)"404 Bad Request\n";
+    }
+
     ifstream file(filepath, std::ios::binary | std::ios::ate);
     if (file.fail()) {
         //file does not exist 404
         DEBUG_PRINT("HERE");
         return (char*)"404 Not Found\n";
     }
-    
     streamsize fsize = file.tellg();
     file.seekg(0, ios::beg);
     
@@ -125,7 +144,11 @@ char *generate_response(string http_type, string filepath) {
     {
         status = http_type + " 200 OK\r\n";
         date = get_date();
-        ctype = "Content-Type: " + filetype(filepath) + "\r\n";
+        
+        ctype = "Content-Type: " + type_of_file + "\r\n";
+        cerr << type_of_file << endl;
+       	
+       
         clen = "Content-Length: " + to_string(fsize) + "\r\n";
         response = status + date + ctype + clen + "\r\n" + fdata.data() + "\r\n";
         int n = response.length();
@@ -204,17 +227,22 @@ int handle_request(char *msg, int socket) {
 void *new_connection(void *new_sock) {
 
     int sock = (uintptr_t)new_sock;
+    int connection = 1;
     
-    char req[MAXREQ] = {0};
-    int n = read(sock, req, MAXURI);
-    if (n < 0) {
-        cout << "error on read!/n" << endl;
-    }
-    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
-    if (!handle_request(req, sock)) { // if 0 (http1.0) close the socket
-        DEBUG_PRINT("Closing socket\n");
-        close(sock);
-    }
+	while(connection){
+	    char req[MAXREQ] = {0};
+	    int n = read(sock, req, MAXURI);
+	    if (n < 0) {
+	        cout << "error on read!/n" << endl;
+	    }
+	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
+	    if (!handle_request(req, sock)) { // if 0 (http1.0) close the socket
+	        connection = 0;
+	    }
+	}
+	DEBUG_PRINT("Closing socket\n");
+	close(sock);
+
 }
 
 
@@ -250,6 +278,8 @@ int main(int argc, char** argv) {
     struct sockaddr_in client_addr;
     clientlen = sizeof(client_addr);
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    // if(setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, ))
     
     if (sock_fd < 0) {
         printf("error opening socket\n");
