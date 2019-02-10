@@ -95,8 +95,7 @@ char *generate_response(string http_type, string filepath) {
     string clen;
     string date;
     
-    //ifstream file(filepath, std::ios::binary | std::ios::ate);
-    ifstream file(filepath, ios::binary);
+    ifstream file(filepath, std::ios::binary | std::ios::ate);
     if (file.fail()) {
         //file does not exist 404
         DEBUG_PRINT("HERE");
