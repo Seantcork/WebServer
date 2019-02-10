@@ -23,7 +23,7 @@
  
  THOUGHTS:
     Split into main.cpp, messagehandler.cpp, utils.cpp
- 
+    CLRF vs LF
  */
 
 #include "Server.hpp"
@@ -81,12 +81,12 @@ string get_date() { //utils
     time(&rawtime);
     timeinfo = localtime(&rawtime);
     
-    strftime(buffer,MAXREQ,"Date: %a, %d %b %G %T %T\n",timeinfo);
+    strftime(buffer,MAXREQ,"Date: %a, %d %b %G %T %T\r",timeinfo);
     string tstring = buffer;
     return tstring;
 }
 
-string generate_response(string http_type, string filepath) {
+char *generate_response(string http_type, string filepath) {
     string response;
     string status;
     string ctype;
@@ -96,7 +96,7 @@ string generate_response(string http_type, string filepath) {
     ifstream file(filepath, std::ios::binary | std::ios::ate);
     if (file.fail()) {
         //file does not exist 404
-        return "404 Not Found";
+        return (char*)"404 Not Found";
     }
     streamsize fsize = file.tellg();
     file.seekg(0, ios::beg);
@@ -112,23 +112,26 @@ string generate_response(string http_type, string filepath) {
     {
         status = http_type +  " 200 OK";
         date = get_date();
-        ctype = "Content-Type: " + filetype(filepath) + "\n";
-        clen = "Content-Length: " + to_string(fsize) + "\n";
-        response = status + date + ctype + clen + "\n" + fdata.data();
-        return response;
+        ctype = "Content-Type: " + filetype(filepath) + "\r";
+        clen = "Content-Length: " + to_string(fsize) + "\r";
+        response = status + date + ctype + clen + "\r" + fdata.data();
+        int n = response.length();
+        char *char_array = new char[n+1];
+        strcpy(char_array, response.c_str());
+        return char_array;
     } else {
         // unable to read (permissions)
-        return "403 Forbidden";
+        return (char*)"403 Forbidden";
     }
-    return "ERROR";
+    return (char*)"ERROR";
 }
 
-int handle_request(char *msg) {
+int handle_request(char *msg, int socket) {
     DEBUG_PRINT("handling request\n");
     
     int get = 0, http1 = 0, http11 = 0, goodreq = 1;
     string http_type;
-    string reply;
+    char *reply;
     
     // Parse request
     const char *request;
@@ -153,10 +156,13 @@ int handle_request(char *msg) {
     
     if(!get || !(http1 && http11)) { // if get is bad or neither http req
         goodreq = 0;
-        reply = "404 Bad Request";
+        reply = (char*)"404 Bad Request";
     } else {
         reply = generate_response(http_type, filepath);
     }
+    
+    send(socket, reply, strlen(reply),0);
+    DEBUG_PRINT("wrote reply");
                                          
     // tell to close the socket or not
     if (http11 && goodreq) {
@@ -176,7 +182,7 @@ void *new_connection(void *new_sock) {
         cout << "error on read!/n" << endl;
     }
     DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
-    if (!handle_request(req)) { // if 0 (http1.0) close the socket
+    if (!handle_request(req, sock)) { // if 0 (http1.0) close the socket
         DEBUG_PRINT("Closing socket\n");
         close(sock);
     }
