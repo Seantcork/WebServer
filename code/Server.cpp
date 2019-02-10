@@ -8,21 +8,23 @@
 /*
  
  IMPLIMENTATION TODO:
-     socket timeouts
+    socket timeouts
+    default filepaths
+    http 1.1 functionality (take multiple requests)
+    check thread exiting
+
      splitting up large messages
      	-meaning recving get messages that are pretty long. Need to think about how to do that.
      	-Idea would be to get to where the message header tells you how long the messaage is. and 
      	-call recv till you have that amount of messages.
-     default filepaths
      check file permissions (can ifstream but unsuccessful read?)
-     how to return messages through socket
      100 Continue (extra)
  
  COMPILE ISSUES:
-    with -std=c++11 flag, can use static dec of map but breaks bind comparison
     some issue printing strings with DEBUGPRINT
  
  KNOWN BUGS:
+    spaces in filenames
  
  THOUGHTS:
     Split into main.cpp, messagehandler.cpp, utils.cpp
@@ -66,10 +68,8 @@ static map<string, string> ftypes = { //utils
 
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
-    //DEBUG_PRINT("Filepath suffix: %s", suffix);
     cout << suffix << endl;
     string filetype = ftypes.find(suffix)->second;
-    //DEBUG_PRINT("Filetype Found: %s", filetype);
     cout << filetype << endl;
     return filetype;
 }
@@ -82,7 +82,7 @@ string get_date() { //utils
     time(&rawtime);
     timeinfo = localtime(&rawtime);
     
-    strftime(buffer,MAXREQ,"Date: %a, %d %b %G %T %T\r",timeinfo);
+    strftime(buffer,MAXREQ,"Date: %a, %d %b %G %T %Z\r\n",timeinfo);
     string tstring = buffer;
     return tstring;
 }
@@ -101,10 +101,11 @@ char *generate_response(string http_type, string filepath) {
         DEBUG_PRINT("HERE");
         return (char*)"404 Not Found\n";
     }
+    
     streamsize fsize = file.tellg();
     file.seekg(0, ios::beg);
     
-    DEBUG_PRINT("FILESIZE READ: %s", fsize);
+    cout << "FILESIZE: " << fsize<< endl;
     
     if (fsize > MAXURI) {
         //handle splitting of response
@@ -113,17 +114,17 @@ char *generate_response(string http_type, string filepath) {
     std::vector<char> fdata(fsize);
 
     //checks to see if user can access files
-    if(access(pathname, R_OK) < 0){
-    	return (char*)"403 Forbidden";
-    }
+//    if(access(filepath, R_OK) < 0) {
+//        return (char*)"403 Forbidden";
+//    }
     
     if (file.read(fdata.data(), fsize)) //data successfully read
     {
-        status = http_type +  " 200 OK";
+        status = http_type + " 200 OK\r\n";
         date = get_date();
-        ctype = "Content-Type: " + filetype(filepath) + "\r";
-        clen = "Content-Length: " + to_string(fsize) + "\r";
-        response = status + date + ctype + clen + "\r" + fdata.data();
+        ctype = "Content-Type: " + filetype(filepath) + "\r\n";
+        clen = "Content-Length: " + to_string(fsize) + "\r\n";
+        response = status + date + ctype + clen + "\r\n" + fdata.data() + "\r\n";
         int n = response.length();
         char *char_array = new char[n+1];
         strcpy(char_array, response.c_str());
@@ -141,37 +142,43 @@ int handle_request(char *msg, int socket) {
     
     int get = 0, http1 = 0, http11 = 0, goodreq = 1;
     string http_type;
+    string filepath = "";
     const char *reply;
     
     // Parse request
     const char *request;
     request = strtok(msg, " ");
+    int pos = 0; // order of req words
     while(request != NULL){
     	cout << request << endl;
-        if(strcmp("GET", request) == 0){
+        if(!strcmp("GET", request) && pos == 0){
         	DEBUG_PRINT("IN GET")
             get = 1;
         }
-        else if(strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) == 0){
+        else if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2){
         	DEBUG_PRINT("IN HTTP/1.0")
             http1 = 1;
             http_type = "HTTP/1.0";
         }
-        else if(strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) == 0){
+        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2){
             http11 = 1;
             http_type = "HTTP/1.1";
         }
+        else if(pos == 1) {
+            filepath = request;
+            printf("FILEPATH SET TO: ");
+            cout << filepath << endl;
+        }
         request = strtok(NULL, " ");
+        pos++;
     }
     
-    // TODO: GET THE FILEPATH FROM THE REQ
-    string filepath = "test.txt";
     DEBUG_PRINT("get: %d, h0: %d, h1 %d", get, http1, http11);
+    
     if(!get || !(http1 || http11)) { // if get is bad or neither http req
         goodreq = 0;
         reply = (char*)"404 Bad Request\n";
     } else {
-        DEBUG_PRINT("Hello");
         reply = generate_response(http_type, filepath);
     }
     
