@@ -60,7 +60,7 @@ using namespace std;
 
 static map<string, string> ftypes = { //utils
     { ".gif", "image/gif"  },
-    { ".jpg", "image/jpeg" },
+    { ".pdf", "image/pdf" },
     { ".png", "image/png"  },
     { ".txt", "text/plain" },
     { ".html", "text/html" }
@@ -95,7 +95,8 @@ char *generate_response(string http_type, string filepath) {
     string clen;
     string date;
     
-    ifstream file(filepath, std::ios::binary | std::ios::ate);
+    //ifstream file(filepath, std::ios::binary | std::ios::ate);
+    ifstream file(filepath, ios::binary);
     if (file.fail()) {
         //file does not exist 404
         DEBUG_PRINT("HERE");
