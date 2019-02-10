@@ -2,7 +2,7 @@
 //  ServerProgram.cpp
 //
 //
-//  Created by Ian Squiers on 1/30/19.
+//  Created by Ian Squiers & Sean Cork on 1/30/19.
 //
 
 /*
