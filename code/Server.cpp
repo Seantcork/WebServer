@@ -209,19 +209,27 @@ int handle_request(char *msg, int socket) {
     }
 
 
-    int file_sent;
-    file_sent = send(socket, reply, strlen(reply) ,0);
-    size_t length_sent = strlen(reply);
-	if(file_sent == -1){
-		cerr << "Errror sending file" << endl;
+    size_t bytes_sent;
+    size_t bytes_left = strlen(reply);
+    bytes_sent = send(socket, reply, strlen(reply) ,0);
+    cerr << "bytes_left" << bytes_left << endl;
+    cerr << "bytes sent" << bytes_sent << endl;
+
+	if(bytes_left == -1){
+		cerr << "Errror sendinfg file" << endl;
 		return -1;
 	}
-	length_sent = length_sent - file_sent;
-	while (file_sent < length_sent){
-		file_sent = send(socket, reply, strlen(reply), 0);
+	
+	bytes_left -= bytes_sent;
+    
+	cerr << bytes_left << endl;;
+
+	while (bytes_left > 0){
+		DEBUG_PRINT("Here");
+		bytes_sent = send(socket, reply, bytes_left, 0);
+		bytes_left -= bytes_sent;
 
 	}
-	cerr << "ERROR sending socket" << endl;
 
     
     DEBUG_PRINT("wrote reply");
