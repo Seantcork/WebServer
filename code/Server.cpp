@@ -10,6 +10,9 @@
  IMPLIMENTATION TODO:
      socket timeouts
      splitting up large messages
+     	-meaning recving get messages that are pretty long. Need to think about how to do that.
+     	-Idea would be to get to where the message header tells you how long the messaage is. and 
+     	-call recv till you have that amount of messages.
      default filepaths
      check file permissions (can ifstream but unsuccessful read?)
      how to return messages through socket
@@ -96,7 +99,7 @@ char *generate_response(string http_type, string filepath) {
     if (file.fail()) {
         //file does not exist 404
         DEBUG_PRINT("HERE");
-        return (char*)"404 Not Found";
+        return (char*)"404 Not Found\n";
     }
     streamsize fsize = file.tellg();
     file.seekg(0, ios::beg);
@@ -108,6 +111,12 @@ char *generate_response(string http_type, string filepath) {
     }
     
     std::vector<char> fdata(fsize);
+
+    //checks to see if user can access files
+    if(access(pathname, R_OK) < 0){
+    	return (char*)"403 Forbidden";
+    }
+    
     if (file.read(fdata.data(), fsize)) //data successfully read
     {
         status = http_type +  " 200 OK";
@@ -132,20 +141,23 @@ int handle_request(char *msg, int socket) {
     
     int get = 0, http1 = 0, http11 = 0, goodreq = 1;
     string http_type;
-    char *reply;
+    const char *reply;
     
     // Parse request
     const char *request;
     request = strtok(msg, " ");
     while(request != NULL){
-        if(strcmp(request, "GET") == 0){
+    	cout << request << endl;
+        if(strcmp("GET", request) == 0){
+        	DEBUG_PRINT("IN GET")
             get = 1;
         }
-        if(strcmp(request, "HTTP/1.0") == 0){
+        else if(strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) == 0){
+        	DEBUG_PRINT("IN HTTP/1.0")
             http1 = 1;
             http_type = "HTTP/1.0";
         }
-        if(strcmp(request, "HTTP/1.1") == 0){
+        else if(strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) == 0){
             http11 = 1;
             http_type = "HTTP/1.1";
         }
@@ -157,13 +169,16 @@ int handle_request(char *msg, int socket) {
     DEBUG_PRINT("get: %d, h0: %d, h1 %d", get, http1, http11);
     if(!get || !(http1 || http11)) { // if get is bad or neither http req
         goodreq = 0;
-        reply = (char*)"404 Bad Request\r";
+        reply = (char*)"404 Bad Request\n";
     } else {
         DEBUG_PRINT("Hello");
         reply = generate_response(http_type, filepath);
     }
     
-    send(socket, reply, strlen(reply),0);
+    if(send(socket, reply, strlen(reply) ,0) == -1){
+    	cerr << "ERROR sending socket" << endl;
+    }
+    
     DEBUG_PRINT("wrote reply");
                                          
     // tell to close the socket or not
