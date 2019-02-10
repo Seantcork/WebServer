@@ -209,10 +209,20 @@ int handle_request(char *msg, int socket) {
     }
 
 
+    int file_sent;
+    file_sent = send(socket, reply, strlen(reply) ,0);
+    size_t length_sent = strlen(reply);
+	if(file_sent == -1){
+		cerr << "Errror sending file" << endl;
+		return -1;
+	}
+	length_sent = length_sent - file_sent;
+	while (file_sent < length_sent){
+		file_sent = send(socket, reply, strlen(reply), 0);
 
-    if(send(socket, reply, strlen(reply) ,0) == -1){
-    	cerr << "ERROR sending socket" << endl;
-    }
+	}
+	cerr << "ERROR sending socket" << endl;
+
     
     DEBUG_PRINT("wrote reply");
                                          
