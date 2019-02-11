@@ -96,16 +96,12 @@ string filetype(string path) { //utils
     string filetype;
 
     //If the file type is not supported by our program raise a flag
-    if(find == ftypes.end()){
+    if (find == ftypes.end()){
     	filetype = "cant handle request";
     }
-    else{
+    else {
     	filetype = find->second;
-
     }
-
-
-    cout << filetype << endl;
     return filetype;
 }
 
@@ -124,7 +120,6 @@ string get_date() { //utils
     
     time(&rawtime);
     timeinfo = localtime(&rawtime);
-    
     strftime(buffer,MAXREQ,"Date: %a, %d %b %G %T %Z\r\n",timeinfo);
     string tstring = buffer;
     return tstring;
