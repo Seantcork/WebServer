@@ -160,7 +160,6 @@ char *generate_response(string http_type, string filepath) {
     
     if (fsize > MAXURI) {
         //handle splitting of response
-        cerr << "big" << endl;
     }
     
     std::vector<char> fdata(fsize);
@@ -181,13 +180,10 @@ char *generate_response(string http_type, string filepath) {
         
         ctype = "Content-Type: " + type_of_file + "\r\n";
         cerr << type_of_file << endl;
-       	
        
         clen = "Content-Length: " + to_string(fsize) + "\r\n";
         response = status + date + ctype + clen + "\r\n" + fdata.data() + "\r\n";
         
-
-    	cerr << response << endl;
         int n = response.length();
         char *char_array = new char[n+1];
         strcpy(char_array, response.c_str());
@@ -327,12 +323,15 @@ Return Value: none
 
 */
 
-// creates and binds a server socket
 int main(int argc, char** argv) {
     
+    //literals
     int c, err, portnum, pflag, rflag = 0;
     char *rootdir;
+    int sock_fd, new_sock, clientlen;
+    struct sockaddr_in client_addr;
     
+    //Parse command line
     while ((c = getopt (argc, argv, "p:r:")) != -1)
         switch (c)
     {
@@ -348,30 +347,35 @@ int main(int argc, char** argv) {
             err = 1;
             break;
     }
+    //check err flag
     if (err) {
         perror("error on commandline");
     }
     
     DEBUG_PRINT("portnum %d, rootdir %s", portnum, rootdir);
     
-    int sock_fd, new_sock, clientlen;
-    
-    struct sockaddr_in client_addr;
+ 
+    //Setup for socket
     clientlen = sizeof(client_addr);
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 
+
+    //set sock options for timeout
     // if(setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, ))
     
+    //make sure sockfd is open
     if (sock_fd < 0) {
         printf("error opening socket\n");
         return -1;
     }
     
+    //set sock structure
     struct sockaddr_in myaddr;
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = htons(portnum);
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    
+
+    //Bind socket and make sure it is correct
     if (::bind(sock_fd, (struct sockaddr*) &myaddr, sizeof(myaddr)) < 0) {
         printf("error binding socket\n");
         return -1;
@@ -379,11 +383,13 @@ int main(int argc, char** argv) {
     
     DEBUG_PRINT("opened and bound socket!\n");
     
+    //listedn for upcoming conections
     if (listen(sock_fd,5) < 0) {
         perror("error on listen!\n");
         return -1;
     }
 
+    //Have a while loop that wiats for incoming connections
     while (1) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
         DEBUG_PRINT("Connection found and accepted\n")
