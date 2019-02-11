@@ -53,6 +53,7 @@
 #include <sys/stat.h>
 #include <vector>
 #include <map>
+#include <utility>
 
 #define DEBUG_ME 1
 #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
@@ -71,6 +72,11 @@ static map<string, string> ftypes = { //utils
     { ".txt", "text/plain" },
     { ".html", "text/html" }
 };
+
+struct arg_struct {
+    string arg1;
+    int arg2;
+}args;
 
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
@@ -104,7 +110,7 @@ string get_date() { //utils
     return tstring;
 }
 
-char *generate_response(string http_type, string filepath) {
+char *generate_response(string http_type, string filepath, string rootdir) {
     DEBUG_PRINT("GENERATING RESPONSE");
     string response;
     string status;
@@ -118,12 +124,20 @@ char *generate_response(string http_type, string filepath) {
         	return (char*)"404 Bad Request\n";
     }
 
-    ifstream file(filepath, std::ios::binary | std::ios::ate);
+    ifstream file;
+    file.open(filepath, std::ios::binary | std::ios::ate);
     if (file.fail()) {
-        //file does not exist 404
-        DEBUG_PRINT("HERE");
-        return (char*)"404 Not Found\n";
+        filepath = rootdir + filepath;
+        cout << "with rootdir : " << filepath << endl;
+        DEBUG_PRINT("Appending RootDir");
+        file.open(filepath, std::ios::binary | std::ios::ate);
+        if (file.fail()) {
+            //file does not exist 404
+            DEBUG_PRINT("HERE");
+            return (char*)"404 Not Found\n";
+        }
     }
+   
     streamsize fsize = file.tellg();
     file.seekg(0, ios::beg);
     
@@ -154,16 +168,19 @@ char *generate_response(string http_type, string filepath) {
         int n = response.length();
         char *char_array = new char[n+1];
         strcpy(char_array, response.c_str());
+        file.close()
         return char_array;
     } else {
         // unable to read (permissions)
+        file.close()
         return (char*)"403 Forbidden";
     }
+    file.close()
     return (char*)"ERROR";
 
 }
 
-int handle_request(char *msg, int socket) {
+int handle_request(char *msg, int socket, string rootdir) {
     DEBUG_PRINT("handling request\n");
     
     int get = 0, http1 = 0, http11 = 0, goodreq = 1;
@@ -205,7 +222,7 @@ int handle_request(char *msg, int socket) {
         goodreq = 0;
         reply = (char*)"404 Bad Request\n";
     } else {
-        reply = generate_response(http_type, filepath);
+        reply = generate_response(http_type, filepath, rootdir);
     }
 
 
@@ -234,9 +251,12 @@ int handle_request(char *msg, int socket) {
     }
 }
 
-void *new_connection(void *new_sock) {
-
-    int sock = (uintptr_t)new_sock;
+void *new_connection(void *info) {
+    
+    struct arg_struct *args = (struct arg_struct *)info;
+    string rootdir = args->arg1;
+    int sock = args->arg2;
+    
     int connection = 1;
     
 	while(connection){
@@ -246,7 +266,7 @@ void *new_connection(void *new_sock) {
 	        cout << "error on read!/n" << endl;
 	    }
 	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
-	    if (!handle_request(req, sock)) { // if 0 (http1.0) close the socket
+	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
 	}
@@ -322,7 +342,11 @@ int main(int argc, char** argv) {
         }
         
         pthread_t new_thread;
-        if( pthread_create( &new_thread, NULL, new_connection, (void*)new_sock ) < 0){
+        struct arg_struct args;
+        args.arg1 = rootdir;
+        args.arg2 = new_sock;
+        
+        if( pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
         	cerr << "Thread Creation Failed" << endl;
         	return -1;
     	}
