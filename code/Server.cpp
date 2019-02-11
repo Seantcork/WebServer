@@ -185,9 +185,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
 
     
     if (file.read(fdata.data(), fdata.size())) { //data successfully read
-    	// for (unsigned i = 0; i < fdata.size(); ++i){
-     //    	cout << fdata[i] << " ";
-    	// }
+    	
         status = http_type + " 200 OK\r\n";
         date = get_date();
         
