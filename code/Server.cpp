@@ -13,18 +13,19 @@
     http 1.1 functionality (take multiple requests)
     check thread exiting
 
-     splitting up large messages
-     	-meaning recving get messages that are pretty long. Need to think about how to do that.
-     	-Idea would be to get to where the message header tells you how long the messaage is. and 
-     	-call recv till you have that amount of messages.
-
 
      Seting mutex when sending and writing data in HTTP/1.1
 
     no guarentee that we will send everything with the just one send especially in HTtp1.1.
     need to determine how to do that.
-    Test to see if 403 works. Will edit file permisions and test it out.
      100 Continue (extra)
+     make sure we recieve the whole message
+     
+ List of Questions:
+    -Embeded links do we need to retrieve
+    -File permisions.
+    -
+
  
  COMPILE ISSUES:
     some issue printing strings with DEBUGPRINT
@@ -66,18 +67,29 @@ using namespace std;
 
 static map<string, string> ftypes = { //utils
     { ".gif", "image/gif"  },
-    { ".pdf", "image/pdf" },
     { ".png", "image/png"  },
     { ".txt", "text/plain" },
     { ".html", "text/html" }
 };
 
+
+/*
+
+Use: This function returns the filetype
+of the requested source as a string.
+Parameters: a string which is the specified file path
+Return value: The mapped string which describes the type
+of file being requested.
+
+*/
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
     cout << suffix << endl;
     map<string, string>::iterator find;
     find = ftypes.find(suffix);
     string filetype;
+
+    //If the file type is not supported by our program raise a flag
     if(find == ftypes.end()){
     	filetype = "cant handle request";
     }
@@ -91,6 +103,14 @@ string filetype(string path) { //utils
     return filetype;
 }
 
+
+/*
+
+Use: Returns a string with the current date and time
+Parameters: none
+Return value: formatted string with time and date
+
+*/
 string get_date() { //utils
     time_t rawtime;
     struct tm * timeinfo;
@@ -104,6 +124,15 @@ string get_date() { //utils
     return tstring;
 }
 
+/*
+
+Use: This Function takes the filepath and the HTTP type and 
+creates and returns an appropirate response to the HTTP request.
+Parameters: http_type which is either http/1.0 or http/1.1 and filepath
+which is the filepath from the directory
+Return value: A char* buffer which represents the HTTP response that the server is going to send.
+
+*/
 char *generate_response(string http_type, string filepath) {
     DEBUG_PRINT("GENERATING RESPONSE");
     string response;
@@ -131,6 +160,7 @@ char *generate_response(string http_type, string filepath) {
     
     if (fsize > MAXURI) {
         //handle splitting of response
+        cerr << "big" << endl;
     }
     
     std::vector<char> fdata(fsize);
@@ -139,9 +169,13 @@ char *generate_response(string http_type, string filepath) {
 //    if(access(filepath, R_OK) < 0) {
 //        return (char*)"403 Forbidden";
 //    }
+
     
-    if (file.read(fdata.data(), fsize)) //data successfully read
+    if (file.read(fdata.data(), fdata.size())) //data successfully read
     {
+    	// for (unsigned i = 0; i < fdata.size(); ++i){
+     //    	cout << fdata[i] << " ";
+    	// }
         status = http_type + " 200 OK\r\n";
         date = get_date();
         
@@ -151,6 +185,9 @@ char *generate_response(string http_type, string filepath) {
        
         clen = "Content-Length: " + to_string(fsize) + "\r\n";
         response = status + date + ctype + clen + "\r\n" + fdata.data() + "\r\n";
+        
+
+    	cerr << response << endl;
         int n = response.length();
         char *char_array = new char[n+1];
         strcpy(char_array, response.c_str());
@@ -162,6 +199,19 @@ char *generate_response(string http_type, string filepath) {
     return (char*)"ERROR";
 
 }
+
+/*
+
+Use: This function takes the message recieved from the socket and the socket number. First it determines
+if the GET request is correctly formated and that the HTTP request is a GET request. It then parses the filepath of
+the HTTP request. If the HTTP request is formatted correctly the function calls Generate Response which generates an
+HTTP message to send. The function then attempts to send the message to the client. If request is HTTP/1.0 it closes
+the socket. Otherwise the socket is kept open.
+Parameters: Char* msg is the buffer recieved from the socket. Int socket is the identifier for the socket number of the
+request.
+Return value: 1 if http1.1 and good request, otherwise return 0.
+
+*/
 
 int handle_request(char *msg, int socket) {
     DEBUG_PRINT("handling request\n");
@@ -212,8 +262,6 @@ int handle_request(char *msg, int socket) {
     size_t bytes_sent;
     size_t bytes_left = strlen(reply);
     bytes_sent = send(socket, reply, strlen(reply) ,0);
-    cerr << "bytes_left" << bytes_left << endl;
-    cerr << "bytes sent" << bytes_sent << endl;
 
 	if(bytes_left == -1){
 		cerr << "Errror sendinfg file" << endl;
@@ -221,8 +269,6 @@ int handle_request(char *msg, int socket) {
 	}
 	
 	bytes_left -= bytes_sent;
-    
-	cerr << bytes_left << endl;;
 
 	while (bytes_left > 0){
 		DEBUG_PRINT("Here");
@@ -230,7 +276,6 @@ int handle_request(char *msg, int socket) {
 		bytes_left -= bytes_sent;
 
 	}
-
     
     DEBUG_PRINT("wrote reply");
                                          
@@ -242,6 +287,14 @@ int handle_request(char *msg, int socket) {
     }
 }
 
+/*
+
+Purpose: Establish a new socket for a incoming conncetion and call functions to deal with
+incoming message from socket
+Parameters: pointer to a new nocket identifier
+Return value: none
+
+*/
 void *new_connection(void *new_sock) {
 
     int sock = (uintptr_t)new_sock;
@@ -263,6 +316,16 @@ void *new_connection(void *new_sock) {
 
 }
 
+
+/*
+
+Purpose: Parse command line arguments, Create and bind socket to portnumber and listen
+for connection requests. The function uses a while loop to listen for incoming connection requests
+and when one is succesfully connected creates a thread for each new connection.
+Parameters: none
+Return Value: none
+
+*/
 
 // creates and binds a server socket
 int main(int argc, char** argv) {
