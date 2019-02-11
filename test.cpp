@@ -97,9 +97,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
         }
     }
     file.seekg(0, file.end);
-    int fsize = int(file.tellg());
-    file.seekg(0, file.beg);
-    file.seekg(15);
+    size_t fsize = file.tellg();
     
     cout << "FILESIZE: " << fsize << endl;
     
@@ -108,7 +106,10 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     }
     
     vector<char> fdata(fsize);
-    char mydata[fsize];
+    char *mydata = 0;
+    mydata = new char[fsize];
+    file.seekg(0, file.beg);
+    cout << file.tellg() << " laskjdf;lkasdjf;alsdjf;alskdf  " << mydata << endl;
     
     //checks to see if user can access files
     //    if(access(filepath, R_OK) < 0) {
@@ -116,11 +117,12 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     //    }
     
     
-    if (file.read(mydata, 500)) { //data successfully read
-        // for (unsigned i = 0; i < fdata.size(); ++i){
-        //        cout << fdata[i] << " ";
-        // }
-        cout << strlen(mydata) << " laskjdf;lkasdjf;alsdjf;alskdf  " << mydata << endl;
+    if (file.read(mydata, fsize)) { //data successfully read
+        for (unsigned i = 0; i < fsize; ++i){
+               cout << *mydata;
+               *mydata++;
+        }
+        cout << file.tellg() << " laskjdf;lkasdjf;alsdjf;alskdf  " << mydata << endl;
         
         status = http_type + " 200 OK\r\n";
         date = get_date();
@@ -147,7 +149,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
 
 int main(int argc, char** argv) {
     
-    char* cat = generate_response("HTTP/1.1","IMG_1797.png","/Users/iansquiers/Desktop/");
+    char* cat = generate_response("HTTP/1.1","IMG_7290.png","/Users/seancork/Desktop/");
     cout << cat << endl;
     return 0;
     
