@@ -60,7 +60,7 @@ printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 fflush(stdout);}
 
 const int MAXURI = 255;
-const int MAXREQ = 80; // good RoT for this?
+const int MAXREQ = 255; // good RoT for this?
 
 using namespace std;
 
