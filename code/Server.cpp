@@ -1,4 +1,4 @@
-//
+// 
 //  ServerProgram.cpp
 //
 //
@@ -38,7 +38,7 @@
     CLRF vs LF
  */
 
-#include "Server.hpp"
+//#include "Server.hpp"
 #include <time.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -55,6 +55,13 @@
 #include <vector>
 #include <map>
 #include <utility>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/sendfile.h>
+
 
 #define DEBUG_ME 1
 #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
@@ -144,7 +151,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     string type_of_file = filetype(filepath);
     
 
-    if(type_of_file.compare("cant handle request") == 0){
+    if (type_of_file.compare("cant handle request") == 0){
         	return (char*)"404 Bad Request\n";
     }
 
@@ -204,6 +211,15 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     return (char*)"ERROR";
 }
 
+int get_file_size(std::string filename) // path to file
+{
+    FILE *p_file = NULL;
+    p_file = fopen(filename.c_str(),"rb");
+    fseek(p_file,0,SEEK_END);
+    int size = ftell(p_file);
+    fclose(p_file);
+    return size;
+}
 
 /*
 
@@ -221,10 +237,12 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 int handle_request(char *msg, int socket, string rootdir) {
     DEBUG_PRINT("handling request\n");
     
-    int get = 0, http1 = 0, http11 = 0, goodreq = 1;
+    int get = 0, http1 = 0, http11 = 0, goodreq = 1, goodfile = 0;
     string http_type;
     string filepath = "";
-    const char *reply;
+    ifstream reqfile;
+    streamsize fsize;
+    const char *header;
     
     // Parse request
     const char *request;
@@ -258,31 +276,98 @@ int handle_request(char *msg, int socket, string rootdir) {
     
     if(!get || !(http1 || http11)) { // if get is bad or neither http req
         goodreq = 0;
-        reply = (char*)"404 Bad Request\n";
-    } else {
-        reply = generate_response(http_type, filepath, rootdir);
-    }
+        header = (char*)"400 Bad Request\r\n";
+    } 
 
+    else {
+        reqfile.open(filepath, ios::binary);
+        if (errno == ENOENT || reqfile.fail()) { // file does not exist
+            filepath = rootdir + filepath;
+            DEBUG_PRINT("Failed: appending rootDir");
+            reqfile.open(filepath, ios::binary);
+            if (errno == ENOENT|| reqfile.fail()) { // file does not exist
+                DEBUG_PRINT("Failed to find file");
+                header = (char*)"404 Not Found\r\n";  
+            }
+        //does this jump clear the errno
+        } else if (errno == EACCES) { // permission denied
+            DEBUG_PRINT("Failed read access");
+            header = (char*)"403 Forbidden\r\n";
+        }
+
+        else if (!filetype(filepath).compare("cant handle request")) {
+            DEBUG_PRINT("Incompatable FileExtension");
+            header = (char*)"404 Bad Request\r\n";
+        }
+
+        else {
+            DEBUG_PRINT("HERE1");
+
+            goodfile = 1;
+            string type_of_file = filetype(filepath);
+            string status = http_type + " 200 OK\r\n";
+            string date = get_date();
+            
+            string ctype = "Content-Type: " + type_of_file + "\r\n";
+
+            fsize = get_file_size(filepath);
+
+            string clen = "Content-Length: " + to_string(fsize) + "\r\n";
+            string response = status + date + ctype + clen + "\r\n";
+            int n = response.length();
+            char *char_array = new char[n+1];
+            strcpy(char_array, response.c_str());
+            header = char_array;
+
+        }
+
+    }
+    reqfile.close();
 
     size_t bytes_sent;
-    size_t bytes_left = strlen(reply);
-    bytes_sent = send(socket, reply, strlen(reply) ,0);
 
+    //send header info
+    size_t bytes_left = strlen(header);
+    bytes_sent = send(socket, header, strlen(header) ,0);
 	if(bytes_left == -1){
 		cerr << "Errror sending file" << endl;
 		return -1;
 	}
-	
+
 	bytes_left -= bytes_sent;
 
 	while (bytes_left > 0){
-		DEBUG_PRINT("Here");
-		bytes_sent = send(socket, reply, bytes_left, 0);
+		DEBUG_PRINT("");
+		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
-
 	}
-    
-    DEBUG_PRINT("wrote reply");
+    if (goodfile) {
+        // send file https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendfile.2.html
+        // https://blog.phusion.nl/2015/06/04/the-brokenness-of-the-sendfile-system-call/
+        int n = filepath.length();
+        char *chars = new char[n+1];
+        strcpy(chars, filepath.c_str());
+
+        int reqfd = open(chars, O_RDONLY);
+        bytes_left = fsize;
+        bytes_sent = sendfile(socket, reqfd, NULL, fsize);
+        if(bytes_left == -1){
+            cerr << "Errror sending file" << endl;
+            return -1;
+        }
+
+        bytes_left -= bytes_sent;
+
+        while (bytes_left > 0){
+            DEBUG_PRINT("bytes_sent");
+            cout << bytes_sent << endl;
+            bytes_sent = sendfile(socket, reqfd, NULL, fsize);
+            bytes_left -= bytes_sent;
+        }
+
+        reqfile.close();
+        DEBUG_PRINT("wrote header");
+    }
                                          
     // tell to close the socket or not
     if (http11 && goodreq) {
@@ -326,6 +411,7 @@ void *new_connection(void *info) {
 	}
 	DEBUG_PRINT("Closing socket\n");
 	close(sock);
+    return NULL;
 
 }
 
@@ -365,7 +451,7 @@ int main(int argc, char** argv) {
             break;
     }
     //check err flag
-    if (err) {
+    if (err || !pflag || !rflag) {
         perror("error on commandline");
     }
     
