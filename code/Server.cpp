@@ -352,7 +352,8 @@ int handle_request(char *msg, int socket, string rootdir) {
 
         while (bytes_left > 0){
             DEBUG_PRINT("bytes_sent");
-            cout << bytes_sent << endl;
+            cout << bytes_left << "bytes_left" << endl;
+            cout << bytes_sent <<  "bytes send" << endl;
             bytes_sent = sendfile(socket, reqfd, NULL, fsize);
             bytes_left -= bytes_sent;
         }
