@@ -72,7 +72,7 @@ static map<string, string> ftypes = { //utils
 };
 
 struct arg_struct {
-    string arg1;
+    char* arg1;
     int arg2;
 }args;
 
