@@ -66,7 +66,7 @@ using namespace std;
 
 static map<string, string> ftypes = { //utils
     { ".gif", "image/gif"  },
-    { ".png", "image/png"  },
+    { ".jpg", "image/jpg"  },
     { ".txt", "text/plain" },
     { ".html", "text/html" }
 };
