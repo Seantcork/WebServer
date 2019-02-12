@@ -8,11 +8,8 @@
 /*
  
  IMPLIMENTATION TODO:
-    socket timeouts
-    default filepaths
     http 1.1 functionality (take multiple requests)
     check thread exiting
-
 
      Seting mutex when sending and writing data in HTTP/1.1
 
@@ -21,12 +18,6 @@
      100 Continue (extra)
      make sure we recieve the whole message
      
- List of Questions:
-    -Embeded links do we need to retrieve
-    -File permisions.
-    -
-
- 
  COMPILE ISSUES:
     some issue printing strings with DEBUGPRINT
  
@@ -406,10 +397,18 @@ void *new_connection(void *info) {
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
+        cout << "here" << endl;
 
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
+            if(ernno == EFAULT){
+                cerr << "sockfd" << endl;
+            }
+            else if(ernno == EINVAL){
+                cerr << "optlen value bad" << endl;
+            }
+
         }
 	}
 	DEBUG_PRINT("Closing socket\n");
