@@ -77,6 +77,17 @@ struct arg_struct {
 }args;
 
 
+struct header_arg{
+    int HTTP1;
+    int HTTP11;
+    int END;
+    int connection;
+    int GET;
+    int goodfile;
+    string filepath;
+}headers;
+
+
 /*
 
 Use: This function returns the filetype
@@ -225,7 +236,7 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(char *msg, int socket, string rootdir) {
+int handle_request(char *msg, int socket, string rootdir, struct headers headers) {
     DEBUG_PRINT("handling request\n");
     
     int get = 0, http1 = 0, http11 = 0, goodreq = 1, goodfile = 0;
@@ -237,31 +248,47 @@ int handle_request(char *msg, int socket, string rootdir) {
     
     // Parse request
     const char *request;
+    const char *carriage;
     request = strtok(msg, " ");
     int pos = 0; // order of req words
+    int num_returns = 0;
     while(request != NULL){
-    	cout << request << endl;
-        if(!strcmp("GET", request) && pos == 0){
-        	DEBUG_PRINT("IN GET")
-            get = 1;
+        while(request != '\r'){
+            cout << request << endl;
+            if(!strcmp("GET", request) && pos == 0){
+                DEBUG_PRINT("IN GET")
+                get = 1;
+                headers.GET = 1;
+            }
+            else if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2){
+                DEBUG_PRINT("IN HTTP/1.0")
+                http1 = 1;
+                headers.http1 = 1;
+                headers.http11 = 0;
+                http_type = "HTTP/1.0";
+            }
+            else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2){
+                http11 = 1;
+                headers.htt11 = 0;
+                headers.http1 = 1;
+                http_type = "HTTP/1.1";
+            }
+            else if(pos == 1) {
+                filepath = request;
+                headers.filepath = request;
+                printf("FILEPATH SET TO: ");
+                cout << filepath << endl;
+            }
+            
+            request= strtok(NULL, " ");
+            pos++;
         }
-        else if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2){
-        	DEBUG_PRINT("IN HTTP/1.0")
-            http1 = 1;
-            http_type = "HTTP/1.0";
+        if(strcmp("\r", request)){
+            num_returns++;
         }
-        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2){
-            http11 = 1;
-            http_type = "HTTP/1.1";
-        }
-        else if(pos == 1) {
-            filepath = request;
-            printf("FILEPATH SET TO: ");
-            cout << filepath << endl;
-        }
-        request = strtok(NULL, " ");
-        pos++;
+        request = strtok(NULL, "\r");
     }
+    
     
     DEBUG_PRINT("get: %d, h0: %d, h1 %d", get, http1, http11);
     
@@ -383,12 +410,13 @@ void *new_connection(void *info) {
     time.tv_sec = 30;
     
     struct arg_struct *args = (struct arg_struct *)info;
+    struct header_arg headers;
     string rootdir = args->arg1;
     cout << rootdir << "this is rootdir" << endl;
     int sock = args->arg2;
     
     int connection = 1;
-	while(connection){
+    while(connection){
         
 	    char req[MAXREQ] = {0};
 	    int n = read(sock, req, MAXURI);
@@ -397,6 +425,7 @@ void *new_connection(void *info) {
 	    }
 	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
+          headers.http
 	        connection = 0;
 	    }
         cout << "here" << endl;
