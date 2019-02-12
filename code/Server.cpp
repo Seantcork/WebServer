@@ -343,7 +343,7 @@ int handle_request(char *msg, int socket, string rootdir) {
         int reqfd = open(chars, O_RDONLY);
         bytes_left = fsize;
         bytes_sent = sendfile(socket, reqfd, NULL, fsize);
-        if(bytes_left == -1){
+        if(bytes_left < -1){
             cerr << "Errror sending file" << endl;
             return -1;
         }
