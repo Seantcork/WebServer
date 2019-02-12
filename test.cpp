@@ -23,7 +23,7 @@
 #include <math.h>
 
 using namespace std;
-#define DEBUG_ME 1
+#define DEBUG_ME 0
 #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
 printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 fflush(stdout);}
@@ -89,7 +89,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
         filepath = rootdir + filepath;
         cout << "with rootdir : " << filepath << endl;
         DEBUG_PRINT("Appending RootDir");
-        file.open(filepath, std::ios::binary | std::ios::ate);
+        file.open(filepath, std::ios::binary | std::ios_base::in);
         if (file.fail()) {
             //file does not exist 404
             DEBUG_PRINT("HERE");
@@ -99,7 +99,6 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     file.seekg(0, file.end);
     int fsize = int(file.tellg());
     file.seekg(0, file.beg);
-    file.seekg(15);
     
     cout << "FILESIZE: " << fsize << endl;
     
@@ -110,17 +109,14 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     vector<char> fdata(fsize);
     char mydata[fsize];
     
-    //checks to see if user can access files
-    //    if(access(filepath, R_OK) < 0) {
-    //        return (char*)"403 Forbidden";
-    //    }
+    file.seekg(12,ios_base::cur);
     
-    
-    if (file.read(mydata, 500)) { //data successfully read
+    if (file.read(mydata, 100)) { //data successfully read
         // for (unsigned i = 0; i < fdata.size(); ++i){
         //        cout << fdata[i] << " ";
         // }
-        cout << strlen(mydata) << " laskjdf;lkasdjf;alsdjf;alskdf  " << mydata << endl;
+        string test = string(mydata);
+        cout << strlen(mydata) << " DATA READ  " << test << endl;
         
         status = http_type + " 200 OK\r\n";
         date = get_date();
