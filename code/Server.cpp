@@ -78,7 +78,7 @@ struct arg_struct {
 }args;
 
 mutex mtx;
-int num_of_connections = 0;
+int connections = 0;
 
 /*
 
