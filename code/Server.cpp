@@ -504,12 +504,18 @@ int main(int argc, char** argv) {
             cout << "error on accept!\n" << endl;
             return -1;
         }
-        
+       	
+
+
+	DEBUG_PRINT("we are her\n");
         pthread_t new_thread;
         struct arg_struct args;
+	DEBUG_PRINT("we are her\n");
         args.arg1 = rootdir;
         args.arg2 = new_sock;
         
+	DEBUG_PRINT("we are her\n");
+	cout << "here" << endl;
         if( pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
         	cerr << "Thread Creation Failed" << endl;
         	return -1;
