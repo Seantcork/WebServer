@@ -253,7 +253,7 @@ int handle_request(char *msg, int socket, string rootdir) {
     int pos = 0; // order of req words
     int num_returns = 0;
     while(request != NULL){
-        while(request != '\r'){
+        while(strcmp(request, "\r)") != 0){
             cout << request << endl;
             if(!strcmp("GET", request) && pos == 0){
                 DEBUG_PRINT("IN GET")
