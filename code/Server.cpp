@@ -271,9 +271,10 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
+        filepath = rootdir + filepath;
         reqfile.open(filepath, ios::binary);
         if (errno == ENOENT || reqfile.fail()) { // file does not exist
-            filepath = rootdir + filepath;
+            //filepath = rootdir + filepath;
             DEBUG_PRINT("Failed: appending rootDir");
             reqfile.open(filepath, ios::binary);
             if (errno == ENOENT|| reqfile.fail()) { // file does not exist
