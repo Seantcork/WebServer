@@ -76,6 +76,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     string ctype;
     string clen;
     string date;
+    char* cresponse;
     string type_of_file = filetype(filepath);
     
     
@@ -99,6 +100,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     file.seekg(0, file.end);
     int fsize = int(file.tellg());
     file.seekg(0, file.beg);
+
     
     cout << "FILESIZE: " << fsize << endl;
     
@@ -107,7 +109,13 @@ char *generate_response(string http_type, string filepath, string rootdir) {
     }
     
     vector<char> fdata(fsize);
-    char mydata[fsize];
+    char *mydata = 0;
+    mydata = new char[fsize];
+    file.seekg(0, file.beg);
+    
+
+
+    //cout << file.tellg() << " laskjdf;lkasdjf;alsdjf;alskdf  " << mydata << endl;
     
     file.seekg(12,ios_base::cur);
     
@@ -119,17 +127,34 @@ char *generate_response(string http_type, string filepath, string rootdir) {
         cout << strlen(mydata) << " DATA READ  " << test << endl;
         
         status = http_type + " 200 OK\r\n";
-        date = get_date();
-        
+        date = get_date(); 
         ctype = "Content-Type: " + type_of_file + "\r\n";
         cerr << type_of_file << endl;
         
         clen = "Content-Length: " + to_string(fsize) + "\r\n";
-        response = status + date + ctype + clen + "\r\n" + fdata.data() + "\r\n";
+        response = status + date + ctype + clen + "\r\n"; // + fdata.data() + "\r\n";
         
+
+        strcpy(cresponse, response.c_str());
+
+        // for (unsigned i = 0; i < response.length(); ++i){
+        //         cout << *cresponse;
+        //         *cresponse++;
+        // }
+
+
         int n = response.length();
-        char *char_array = new char[n+1];
-        strcpy(char_array, response.c_str());
+        char *char_array = new char[fsize + response.length()];
+        //strcpy(char_array, mydata);
+        cout << "here" << endl;
+        memcpy(char_array, mydata, fsize + response.length());
+        cout << "heeeee" << endl;
+        memcpy(char_array, cresponse, response.length());
+
+        // for (unsigned i = 0; i < fsize; ++i){
+        //         cout << *char_array;
+        //         *char_array++;
+        // }
         file.close();
         return char_array;
     } else {
@@ -143,8 +168,14 @@ char *generate_response(string http_type, string filepath, string rootdir) {
 
 int main(int argc, char** argv) {
     
-    char* cat = generate_response("HTTP/1.1","IMG_1797.png","/Users/iansquiers/Desktop/");
-    cout << cat << endl;
+    char* cat = generate_response("HTTP/1.1","IMG_7290.png","/Users/seancork/Desktop/");
+
+    for(int i =0; i < 84255; i++){
+        cout << *cat;
+        *cat++;
+    }
+
+    
     return 0;
     
 //

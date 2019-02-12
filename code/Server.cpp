@@ -180,9 +180,7 @@ char *generate_response(string http_type, string filepath, string rootdir) {
 
     
     if (file.read(fdata.data(), fdata.size())) { //data successfully read
-    	// for (unsigned i = 0; i < fdata.size(); ++i){
-     //    	cout << fdata[i] << " ";
-    	// }
+    	
         status = http_type + " 200 OK\r\n";
         date = get_date();
         
@@ -195,14 +193,14 @@ char *generate_response(string http_type, string filepath, string rootdir) {
         int n = response.length();
         char *char_array = new char[n+1];
         strcpy(char_array, response.c_str());
-        file.close()
+        file.close();
         return char_array;
     } else {
         // unable to read (permissions)
-        file.close()
+        file.close();
         return (char*)"403 Forbidden";
     }
-    file.close()
+    file.close();
     return (char*)"ERROR";
 }
 
@@ -271,7 +269,7 @@ int handle_request(char *msg, int socket, string rootdir) {
     bytes_sent = send(socket, reply, strlen(reply) ,0);
 
 	if(bytes_left == -1){
-		cerr << "Errror sendinfg file" << endl;
+		cerr << "Errror sending file" << endl;
 		return -1;
 	}
 	
@@ -309,8 +307,13 @@ void *new_connection(void *info) {
     int sock = args->arg2;
     
     int connection = 1;
-    
+    int timeout = 2;
 	while(connection){
+        
+        if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)(&timeout), sizeof(timeout)) < 0){
+            cerr << "set sock options failing." << endl;
+            perror("socket optin failing");
+        }
 	    char req[MAXREQ] = {0};
 	    int n = read(sock, req, MAXURI);
 	    if (n < 0) {
@@ -394,6 +397,8 @@ int main(int argc, char** argv) {
         printf("error binding socket\n");
         return -1;
     }
+
+
     
     DEBUG_PRINT("opened and bound socket!\n");
     
