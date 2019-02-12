@@ -8,11 +8,8 @@
 /*
  
  IMPLIMENTATION TODO:
-    socket timeouts
-    default filepaths
     http 1.1 functionality (take multiple requests)
     check thread exiting
-
 
      Seting mutex when sending and writing data in HTTP/1.1
 
@@ -21,12 +18,6 @@
      100 Continue (extra)
      make sure we recieve the whole message
      
- List of Questions:
-    -Embeded links do we need to retrieve
-    -File permisions.
-    -
-
- 
  COMPILE ISSUES:
     some issue printing strings with DEBUGPRINT
  
@@ -81,7 +72,7 @@ static map<string, string> ftypes = { //utils
 };
 
 struct arg_struct {
-    string arg1;
+    char* arg1;
     int arg2;
 }args;
 
@@ -280,9 +271,10 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
+        filepath = rootdir + filepath;
         reqfile.open(filepath, ios::binary);
         if (errno == ENOENT || reqfile.fail()) { // file does not exist
-            filepath = rootdir + filepath;
+            //filepath = rootdir + filepath;
             DEBUG_PRINT("Failed: appending rootDir");
             reqfile.open(filepath, ios::binary);
             if (errno == ENOENT|| reqfile.fail()) { // file does not exist
@@ -391,6 +383,7 @@ void *new_connection(void *info) {
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
+    cout << rootdir << "this is rootdir" << endl;
     int sock = args->arg2;
     
     int connection = 1;
@@ -406,10 +399,18 @@ void *new_connection(void *info) {
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
+        cout << "here" << endl;
 
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
+            if(errno == EFAULT){
+                cerr << "sockfd" << endl;
+            }
+            else if(errno == EINVAL){
+                cerr << "optlen value bad" << endl;
+            }
+
         }
 	}
 	DEBUG_PRINT("Closing socket\n");
@@ -505,12 +506,18 @@ int main(int argc, char** argv) {
             cout << "error on accept!\n" << endl;
             return -1;
         }
-        
+       	
+
+
+	DEBUG_PRINT("we are her\n");
         pthread_t new_thread;
         struct arg_struct args;
+	DEBUG_PRINT("we are her\n");
         args.arg1 = rootdir;
         args.arg2 = new_sock;
         
+	DEBUG_PRINT("we are her\n");
+	cout << "here" << endl;
         if( pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
         	cerr << "Thread Creation Failed" << endl;
         	return -1;
