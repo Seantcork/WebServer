@@ -383,6 +383,7 @@ void *new_connection(void *info) {
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
+    cout << rootdir << "this is rootdir" << endl;
     int sock = args->arg2;
     
     int connection = 1;
