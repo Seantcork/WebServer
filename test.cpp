@@ -148,7 +148,6 @@ char *generate_response(string http_type, string filepath, string rootdir) {
         int n = response.length();
         char *char_array = new char[fsize + response.length()];
         //strcpy(char_array, mydata);
-        cout << "here" << endl;
         memcpy(char_array, mydata, fsize + response.length());
         cout << "heeeee" << endl;
         memcpy(char_array, cresponse, response.length());
