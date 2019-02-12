@@ -402,10 +402,10 @@ void *new_connection(void *info) {
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
-            if(ernno == EFAULT){
+            if(errno == EFAULT){
                 cerr << "sockfd" << endl;
             }
-            else if(ernno == EINVAL){
+            else if(errno == EINVAL){
                 cerr << "optlen value bad" << endl;
             }
 
