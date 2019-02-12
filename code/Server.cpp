@@ -77,16 +77,6 @@ struct arg_struct {
 }args;
 
 
-struct header_arg{
-    int HTTP1;
-    int HTTP11
-    int END;
-    int connection;
-    int GET;
-    int goodfile;
-}headers;
-
-
 /*
 
 Use: This function returns the filetype
@@ -258,12 +248,10 @@ int handle_request(char *msg, int socket, string rootdir) {
         else if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2){
         	DEBUG_PRINT("IN HTTP/1.0")
             http1 = 1;
-            //headers.http = 0;
             http_type = "HTTP/1.0";
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2){
             http11 = 1;
-            //headers.http = 1;
             http_type = "HTTP/1.1";
         }
         else if(pos == 1) {
@@ -395,13 +383,12 @@ void *new_connection(void *info) {
     time.tv_sec = 30;
     
     struct arg_struct *args = (struct arg_struct *)info;
-    struct header_arg headers;
     string rootdir = args->arg1;
     cout << rootdir << "this is rootdir" << endl;
     int sock = args->arg2;
     
     int connection = 1;
-    while(connection){
+	while(connection){
         
 	    char req[MAXREQ] = {0};
 	    int n = read(sock, req, MAXURI);
