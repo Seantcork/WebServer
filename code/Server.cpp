@@ -321,7 +321,7 @@ int handle_request(char *msg, int socket, string rootdir) {
     //send header info
     size_t bytes_left = strlen(header);
     bytes_sent = send(socket, header, strlen(header) ,0);
-	if(bytes_left == -1){
+	if(bytes_left < 0){
 		cerr << "Errror sending file" << endl;
 		return -1;
 	}
@@ -329,7 +329,7 @@ int handle_request(char *msg, int socket, string rootdir) {
 	bytes_left -= bytes_sent;
 
 	while (bytes_left > 0){
-		DEBUG_PRINT("");
+        cout << bytes_left << endl;
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
@@ -379,7 +379,7 @@ Return value: none
 */
 void *new_connection(void *info) {
     struct timeval time;
-    time.tv_sec = 20;
+    time.tv_sec = 30;
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
@@ -387,7 +387,6 @@ void *new_connection(void *info) {
     int sock = args->arg2;
     
     int connection = 1;
-    int timeout = 2;
 	while(connection){
         
 	    char req[MAXREQ] = {0};
