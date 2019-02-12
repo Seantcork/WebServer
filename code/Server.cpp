@@ -386,6 +386,8 @@ Return value: none
 
 */
 void *new_connection(void *info) {
+    struct timeval time;
+    time.tv_sec = 20;
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
@@ -395,10 +397,6 @@ void *new_connection(void *info) {
     int timeout = 2;
 	while(connection){
         
-        if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)(&timeout), sizeof(timeout)) < 0){
-            cerr << "set sock options failing." << endl;
-            perror("socket optin failing");
-        }
 	    char req[MAXREQ] = {0};
 	    int n = read(sock, req, MAXURI);
 	    if (n < 0) {
@@ -408,6 +406,11 @@ void *new_connection(void *info) {
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
+
+        if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
+            cerr << "set sock options failing." << endl;
+            perror("socket failing");
+        }
 	}
 	DEBUG_PRINT("Closing socket\n");
 	close(sock);
