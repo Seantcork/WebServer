@@ -236,7 +236,7 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(char *msg, int socket, string rootdir, struct headers headers) {
+int handle_request(char *msg, int socket, string rootdir) {
     DEBUG_PRINT("handling request\n");
     
     int get = 0, http1 = 0, http11 = 0, goodreq = 1, goodfile = 0;
@@ -258,24 +258,24 @@ int handle_request(char *msg, int socket, string rootdir, struct headers headers
             if(!strcmp("GET", request) && pos == 0){
                 DEBUG_PRINT("IN GET")
                 get = 1;
-                headers.GET = 1;
+                //headers.GET = 1;
             }
             else if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2){
                 DEBUG_PRINT("IN HTTP/1.0")
                 http1 = 1;
-                headers.http1 = 1;
-                headers.http11 = 0;
+                //headers.http1 = 1;
+                //headers.http11 = 0;
                 http_type = "HTTP/1.0";
             }
             else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2){
                 http11 = 1;
-                headers.htt11 = 0;
-                headers.http1 = 1;
+                //headers.htt11 = 0;
+                //headers.http1 = 1;
                 http_type = "HTTP/1.1";
             }
             else if(pos == 1) {
                 filepath = request;
-                headers.filepath = request;
+                //headers.filepath = request;
                 printf("FILEPATH SET TO: ");
                 cout << filepath << endl;
             }
@@ -425,7 +425,6 @@ void *new_connection(void *info) {
 	    }
 	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
-          headers.http
 	        connection = 0;
 	    }
         cout << "here" << endl;
