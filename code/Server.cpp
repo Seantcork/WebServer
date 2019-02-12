@@ -46,6 +46,7 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <mutex>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -76,6 +77,8 @@ struct arg_struct {
     int arg2;
 }args;
 
+mutex mtx;
+int num_of_connections = 0;
 
 /*
 
@@ -352,8 +355,6 @@ int handle_request(char *msg, int socket, string rootdir) {
 
         while (bytes_left > 0){
             DEBUG_PRINT("bytes_sent");
-            cout << bytes_left << "bytes_left" << endl;
-            cout << bytes_sent <<  "bytes send" << endl;
             bytes_sent = sendfile(socket, reqfd, NULL, fsize);
             bytes_left -= bytes_sent;
         }
@@ -380,7 +381,7 @@ Return value: none
 */
 void *new_connection(void *info) {
     struct timeval time;
-    time.tv_sec = 30;
+    time.tv_sec = 40;
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
@@ -393,14 +394,19 @@ void *new_connection(void *info) {
 	    char req[MAXREQ] = {0};
 	    int n = read(sock, req, MAXURI);
 	    if (n < 0) {
-	        cout << "error on read!/n" << endl;
+	        cerr << "error on read!/n" << endl;
 	    }
 	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
-        cout << "here" << endl;
-
+        if(connections > 5){
+            time.tv_sec = 20;
+        }
+        else if(connections > 10){
+            time.tv_sec = 10;
+        }
+        cout << "this is the number of connections" << connections << endl;
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
@@ -415,6 +421,10 @@ void *new_connection(void *info) {
 	}
 	DEBUG_PRINT("Closing socket\n");
 	close(sock);
+   
+    mtx.lock();
+    conections--;
+    mtx.unlock();
     return NULL;
 
 }
@@ -503,22 +513,20 @@ int main(int argc, char** argv) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
         DEBUG_PRINT("Connection found and accepted\n")
         if (new_sock < 0) {
-            cout << "error on accept!\n" << endl;
+            cerr << "error on accept!\n" << endl;
             return -1;
         }
        	
-
-
-	DEBUG_PRINT("we are her\n");
+        mtx.lock()
+        conections++;
+        mtx.unlock();
+        
         pthread_t new_thread;
         struct arg_struct args;
-	DEBUG_PRINT("we are her\n");
         args.arg1 = rootdir;
         args.arg2 = new_sock;
         
-	DEBUG_PRINT("we are her\n");
-	cout << "here" << endl;
-        if( pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
+        if(pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
         	cerr << "Thread Creation Failed" << endl;
         	return -1;
     	}
