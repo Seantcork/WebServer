@@ -333,7 +333,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
         }
         request = strtok_r(rest, " ", &rest);
         cerr<< pos << endl;
-        pos++
+        pos++;
     }
 }
 
