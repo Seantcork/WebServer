@@ -295,7 +295,6 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
     while(request != NULL){
         cerr << request << "this is the request" << endl;
         
-
         if(!strcmp("GET", request) && pos == 0){
             get = 1;
         }
@@ -303,37 +302,38 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             cerr << rinfo->http_type << " this si http_type" << endl;
             rinfo->http_type = "HTTP/1.0";
         }
-        if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
+        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
             rinfo->http_type = "HTTP/1.1";
             cerr << rinfo->http_type << " this si http_type" << endl;
             rinfo->calive = 1;
         }
-        if(pos == 1 && get) {
+        else if(pos == 1 && get) {
             rinfo->filepath = request;
             cerr << rinfo->filepath << " this is filepath" << endl;
         }
-        if(strncmp("Connection:", request, strlen("Connection:")) == 0) {
+        else if(strncmp("Connection:", request, strlen("Connection:")) == 0) {
             cerr << "in connection" << endl;
             con = 1;
         }
-        if(strncmp("Keep-Alive", request, strlen("Keep-Alive") == 0) && con) {
+        else if(strncmp("Keep-Alive", request, strlen("Keep-Alive") == 0) && con) {
             cerr << "in alive" << endl;
             rinfo->calive = 1;
         }
-        if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
+        else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
             rinfo->cclose = 1;
         }
-        if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
+        else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
             rinfo->host = 1;
         }
-        if(strncmp("\r", request, strlen("\r") == 0)) {
+        else if(strncmp("\r", request, strlen("\r") == 0)) {
             DEBUG_PRINT("READ 2 RETURNS");
             rinfo->done = 1;
             cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
         request = strtok_r(rest, " ", &rest);
-        pos++;
+        cerr<< pos << endl;
+        pos++
     }
 }
 
