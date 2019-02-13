@@ -288,11 +288,11 @@ int handle_request(int socket, string rootdir, shared_ptr<request_struct> rinfo)
 void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
     char *request;
     char *rest = msg;
-    request = strtok_r(rest, " ", &rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
     while(request != NULL){
+        request = strtok_r(rest, " ", &rest);
         cerr << request << "this is the request" << endl;
         
         if(!strcmp("GET", request) && pos == 0){
@@ -331,7 +331,6 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
-        request = strtok_r(rest, " ", &rest);
         cerr<< pos << endl;
         pos++;
     }
@@ -360,7 +359,7 @@ void *new_connection(void *info) {
         while(!rinfo->done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
+            //DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
 
             if (n < 0) {
                 cerr << "error on read!/n" << endl;
