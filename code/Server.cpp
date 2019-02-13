@@ -309,7 +309,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             rinfo->filepath = request;
             cout << rinfo->filepath << " this is filepath" << endl;
         }
-        else if(strncmp("Connection:", request, strlen("Connection:"))) {
+        else if(strncmp("Connection:", request, strlen("Connection:")) == 0) {
             cout << "in connection" << endl;
             con = 1;
         }
