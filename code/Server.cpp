@@ -320,8 +320,8 @@ void tokenize(char* msg, request_struct *rinfo) {
         }
         else if(!strncmp("\r", request, strlen("\r"))) {
             DEBUG_PRINT("READ 2 RETURNS");
-            rinfo.done = 1;
-            cout << rinfo.done << "this is rinfo in tokenize:" << endl;
+            rinfo->done = 1;
+            cout << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
         request = strtok(NULL, " ");
@@ -345,7 +345,7 @@ void *new_connection(void *info) {
     string rootdir = args->arg1;
     int sock = args->arg2;
     
-    shared_ptr<request_struct> rinfo = new request_struct;
+    shared_ptr<request_struct> rinfo(new request_struct);
     int connection = 1;
 	while(connection){
 
