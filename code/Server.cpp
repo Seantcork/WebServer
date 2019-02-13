@@ -46,6 +46,7 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <mutex>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -59,8 +60,9 @@
 printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 fflush(stdout);}
 
-const int MAXURI = 8000;
-const int MAXREQ = 8000; // good RoT for this?
+
+const int MAXURI = 4000;
+const int MAXREQ = 4000; // good RoT for this?
 
 using namespace std;
 
@@ -76,6 +78,8 @@ struct arg_struct {
     int arg2;
 }args;
 
+mutex mtx;
+int connections = 0;
 
 /*
 
@@ -271,7 +275,22 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
-        filepath = rootdir + filepath;
+        if(rootdir[0] != '/'){
+            char directory[100];
+            if(getcwd(directory, sizeof(directory)) == NULL){
+                cerr << "error getting current working directory" << endl;
+            }
+            rootdir = (string)directory + "/" + rootdir;
+            cout << rootdir << endl;
+        }
+        if(filepath.length() == 1 && filepath.compare("/") == 0){
+            filepath = "/index.html";
+            filepath = rootdir + filepath;
+        }
+        else{
+            filepath = rootdir + filepath;
+            
+        }
         reqfile.open(filepath, ios::binary);
         if (errno == ENOENT || reqfile.fail()) { // file does not exist
             //filepath = rootdir + filepath;
@@ -321,21 +340,20 @@ int handle_request(char *msg, int socket, string rootdir) {
     //send header info
     size_t bytes_left = strlen(header);
     bytes_sent = send(socket, header, strlen(header) ,0);
-	if(bytes_left == -1){
-		cerr << "Errror sending file" << endl;
+	if(bytes_left < 0){
+		cerr << "Errror sending headers" << endl;
 		return -1;
 	}
 
 	bytes_left -= bytes_sent;
 
 	while (bytes_left > 0){
-		DEBUG_PRINT("");
+        cout << bytes_left << endl;
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
     if (goodfile) {
-        // send file https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendfile.2.html
-        // https://blog.phusion.nl/2015/06/04/the-brokenness-of-the-sendfile-system-call/
+
         int n = filepath.length();
         char *chars = new char[n+1];
         strcpy(chars, filepath.c_str());
@@ -343,7 +361,7 @@ int handle_request(char *msg, int socket, string rootdir) {
         int reqfd = open(chars, O_RDONLY);
         bytes_left = fsize;
         bytes_sent = sendfile(socket, reqfd, NULL, fsize);
-        if(bytes_left == -1){
+        if(bytes_left < 0){
             cerr << "Errror sending file" << endl;
             return -1;
         }
@@ -352,7 +370,6 @@ int handle_request(char *msg, int socket, string rootdir) {
 
         while (bytes_left > 0){
             DEBUG_PRINT("bytes_sent");
-            cout << bytes_sent << endl;
             bytes_sent = sendfile(socket, reqfd, NULL, fsize);
             bytes_left -= bytes_sent;
         }
@@ -379,7 +396,7 @@ Return value: none
 */
 void *new_connection(void *info) {
     struct timeval time;
-    time.tv_sec = 20;
+    time.tv_sec = 40;
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
@@ -387,20 +404,24 @@ void *new_connection(void *info) {
     int sock = args->arg2;
     
     int connection = 1;
-    int timeout = 2;
 	while(connection){
         
 	    char req[MAXREQ] = {0};
 	    int n = read(sock, req, MAXURI);
 	    if (n < 0) {
-	        cout << "error on read!/n" << endl;
+	        cerr << "error on read!/n" << endl;
 	    }
 	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
 	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
-        cout << "here" << endl;
-
+        if(connections > 5){
+            time.tv_sec = 20;
+        }
+        else if(connections > 10){
+            time.tv_sec = 10;
+        }
+        cout << "this is the number of connections" << connections << endl;
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
@@ -415,6 +436,10 @@ void *new_connection(void *info) {
 	}
 	DEBUG_PRINT("Closing socket\n");
 	close(sock);
+   
+    mtx.lock();
+    connections--;
+    mtx.unlock();
     return NULL;
 
 }
@@ -503,22 +528,20 @@ int main(int argc, char** argv) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
         DEBUG_PRINT("Connection found and accepted\n")
         if (new_sock < 0) {
-            cout << "error on accept!\n" << endl;
+            cerr << "error on accept!\n" << endl;
             return -1;
         }
        	
-
-
-	DEBUG_PRINT("we are her\n");
+        mtx.lock();
+        connections++;
+        mtx.unlock();
+        
         pthread_t new_thread;
         struct arg_struct args;
-	DEBUG_PRINT("we are her\n");
         args.arg1 = rootdir;
         args.arg2 = new_sock;
         
-	DEBUG_PRINT("we are her\n");
-	cout << "here" << endl;
-        if( pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
+        if(pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
         	cerr << "Thread Creation Failed" << endl;
         	return -1;
     	}
