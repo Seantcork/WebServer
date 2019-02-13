@@ -162,12 +162,14 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(int socket, string rootdir, ) {
+int handle_request(int socket, string rootdir, request_struct rinfo) {
     DEBUG_PRINT("handling request\n");
     
     size_t fsize;
     int goodfile = 0;
     string filepath = rinfo.filepath;
+    ifstream reqfile;
+    int goodreq = 0;
 
     const char *header;
     if(rinfo.get && (rinfo.http_type.empty())) { // if get is bad or neither http req
@@ -178,6 +180,7 @@ int handle_request(int socket, string rootdir, ) {
     }
 
     else {
+	goodreq = 1;
         if(rootdir[0] != '/'){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
@@ -194,8 +197,8 @@ int handle_request(int socket, string rootdir, ) {
             filepath = rootdir + filepath;
         }
 
-        open(filepath, ios::binary);
-        if (errno == ENOENT) { // file does not exist
+        reqfile.open(filepath, ios::binary);
+        if (errno == ENOENT || reqfile.fail()) { // file does not exist
             DEBUG_PRINT("File does not exist");
             header = (char*)"404 Not Found\r\n";  
         } 
@@ -274,7 +277,7 @@ int handle_request(int socket, string rootdir, ) {
     }
                                          
     // tell to close the socket or not
-    if (http11 && goodreq) {
+    if (rinfo.calive && goodreq) {
         return 1;
     } else {
         return 0;
@@ -297,6 +300,7 @@ void tokenize(char* msg, request_struct rinfo) {
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
             rinfo.http_type = "HTTP/1.1";
+	    rinfo.calive = 1;
         }
         else if(pos == 1 && get) {
             rinfo.filepath = request;
@@ -310,12 +314,12 @@ void tokenize(char* msg, request_struct rinfo) {
         else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
             rinfo.cclose = 1;
         }
-        else if(!strncmp("Host", request, strlen("Host")) && pos = 0) {
+        else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
             rinfo.host = 1;
         }
         else if(!strncmp("\r", request, strlen("\r"))) {
             DEBUG_PRINT("READ 2 RETURNS");
-            rinfo.end = 1;
+            rinfo.done = 1;
         }
         request = strtok(NULL, " ");
         pos++;
@@ -342,9 +346,9 @@ void *new_connection(void *info) {
     int connection = 1;
 	while(connection){
 
-        while(!rinfo.end) {
+        while(!rinfo.done) {
             char req[MAXREQ] = {0};
-            int n = recv(sock, req, MAXURI);
+            int n = recv(sock, req, MAXURI, 0);
             DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
 
             if (n < 0) {
