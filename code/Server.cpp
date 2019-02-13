@@ -162,20 +162,20 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(int socket, string rootdir, request_struct rinfo) {
+int handle_request(int socket, string rootdir, request_struct *rinfo) {
     DEBUG_PRINT("handling request\n");
     
     size_t fsize;
     int goodfile = 0;
-    string filepath = rinfo.filepath;
+    string filepath = rinfo->filepath;
     ifstream reqfile;
     int goodreq = 0;
 
     const char *header;
-    if(rinfo.get && (rinfo.http_type.empty())) { // if get is bad or neither http req
+    if(rinfo->get && (rinfo->http_type.empty())) { // if get is bad or neither http req
         header = (char*)"400 Bad Request\r\n";
     } 
-    if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
+    if(rinfo->http_type.back() == '1' && !(rinfo->cclose || rinfo->calive)) {
         header = (char*)"400 Bad Request\r\n";
     }
 
@@ -215,7 +215,7 @@ int handle_request(int socket, string rootdir, request_struct rinfo) {
             DEBUG_PRINT("HERE 1");
             goodfile = 1;
             string type_of_file = filetype(filepath);
-            string status = rinfo.http_type + " 200 OK\r\n";
+            string status = rinfo->http_type + " 200 OK\r\n";
             string date = get_date();
             
             string ctype = "Content-Type: " + type_of_file + "\r\n";
@@ -277,14 +277,14 @@ int handle_request(int socket, string rootdir, request_struct rinfo) {
     }
                                          
     // tell to close the socket or not
-    if (rinfo.calive && goodreq) {
+    if (rinfo->calive && goodreq) {
         return 1;
     } else {
         return 0;
     }
 }
 
-void tokenize(char* msg, request_struct rinfo) {
+void tokenize(char* msg, request_struct *rinfo) {
     const char *request;
     request = strtok(msg, " ");
     int get = 0; // get line
@@ -296,31 +296,34 @@ void tokenize(char* msg, request_struct rinfo) {
             get = 1;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
-            rinfo.http_type = "HTTP/1.0";
+            rinfo->http_type = "HTTP/1.0";
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
-            rinfo.http_type = "HTTP/1.1";
-	    rinfo.calive = 1;
+            rinfo->http_type = "HTTP/1.1";
+	    rinfo->calive = 1;
         }
         else if(pos == 1 && get) {
-            rinfo.filepath = request;
+            rinfo->filepath = request;
         }
         else if(!strncmp("Connection:", request, strlen("Connection:")) && pos == 0) {
             con = 1;
         }
-        else if(!strncmp("keep-alive", request, strlen("keep-alive")) && pos == 1 && con) {
-            rinfo.calive = 1;
+        else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && pos == 1 && con) {
+		cout << "here" << endl;
+            rinfo->calive = 1;
         }
         else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
-            rinfo.cclose = 1;
+            rinfo->cclose = 1;
         }
         else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
-            rinfo.host = 1;
+            rinfo->host = 1;
         }
         else if(!strncmp("\r", request, strlen("\r"))) {
             DEBUG_PRINT("READ 2 RETURNS");
-            rinfo.done = 1;
+            rinfo->done = 1;
+	    return;
         }
+	rinfo->done = 1;
         request = strtok(NULL, " ");
         pos++;
     }
@@ -342,11 +345,11 @@ void *new_connection(void *info) {
     string rootdir = args->arg1;
     int sock = args->arg2;
     
-    request_struct rinfo;
+    request_struct *rinfo = new request_struct;
     int connection = 1;
 	while(connection){
 
-        while(!rinfo.done) {
+        while(!rinfo->done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
             DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
@@ -355,6 +358,8 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
             }
             tokenize(req, rinfo);
+	    cout << rinfo->done << "rinfo stuif" << endl;
+
         }
 	    
 	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
