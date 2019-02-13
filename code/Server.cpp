@@ -292,29 +292,29 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
     int con = 0; // connection line
     int pos = 0; // order of req words
     while(request != NULL){
-        cout << request << "this is the request" << endl;
+        cerr << request << "this is the request" << endl;
         if(!strcmp("GET", request) && pos == 0){
             get = 1;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
-            cout << rinfo->http_type << " this si http_type" << endl;
+            cerr << rinfo->http_type << " this si http_type" << endl;
             rinfo->http_type = "HTTP/1.0";
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
             rinfo->http_type = "HTTP/1.1";
-            cout << rinfo->http_type << " this si http_type" << endl;
+            cerr << rinfo->http_type << " this si http_type" << endl;
             rinfo->calive = 1;
         }
         else if(pos == 1 && get) {
             rinfo->filepath = request;
-            cout << rinfo->filepath << " this is filepath" << endl;
+            cerr << rinfo->filepath << " this is filepath" << endl;
         }
         else if(strncmp("Connection:", request, strlen("Connection:")) == 0) {
-            cout << "in connection" << endl;
+            cerr << "in connection" << endl;
             con = 1;
         }
         else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
-            cout << "in alive" << endl;
+            cerr << "in alive" << endl;
             rinfo->calive = 1;
         }
         else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
@@ -326,7 +326,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
         else if(strncmp("\r", request, strlen("\r") == 0)) {
             DEBUG_PRINT("READ 2 RETURNS");
             rinfo->done = 1;
-            cout << rinfo->done << "this is rinfo in tokenize:" << endl;
+            cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
         request = strtok(NULL, " ");
