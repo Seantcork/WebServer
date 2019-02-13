@@ -292,7 +292,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
     int con = 0; // connection line
     int pos = 0; // order of req words
     while(request != NULL){
-        cout << request << "  :this is the request" << endl;
+        cout << request << "this is the request" << endl;
         if(!strcmp("GET", request) && pos == 0){
             get = 1;
         }
