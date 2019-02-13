@@ -331,6 +331,9 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
+        if(strncmp("\r\n\r\n", request, strlen(""\r\n\r\n"") == 0)){
+            cout << "in here baby" << endl;
+        }
         request = strtok_r(rest, "\r\n", &rest);
         cerr<< pos << endl;
         pos++;
