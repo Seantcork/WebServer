@@ -47,6 +47,7 @@
 #include <map>
 #include <utility>
 #include <mutex>
+#include <memory>
 
 #include <sys/types.h>
 #include <sys/stat.h>
