@@ -326,6 +326,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             return;
         }
         request = strtok(NULL, " ");
+        request = strtok(NULL, "\r");
         pos++;
     }
 }
