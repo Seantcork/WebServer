@@ -299,7 +299,7 @@ void prints(request_struct &toprint) {
 void tokenize(char* msg, request_struct &rinfo) {
     char *request;
     char *rest = msg;
-    request = strtok_r(rest, " ", &rest);
+    request = strtok_r(rest, "\r\n", &rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
@@ -341,7 +341,10 @@ void tokenize(char* msg, request_struct &rinfo) {
         else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
             rinfo.host = 1;
         }
-        request = strtok_r(rest, " ", &rest);
+        if(strncmp("\r\r", request, strlen("\r\n\r\n") == 0)){
+            cout << "in here baby" << endl;
+        }
+        request = strtok_r(rest, "\r\n", &rest);
         cerr<< pos << endl;
         pos++;
     }
