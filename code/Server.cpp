@@ -274,12 +274,13 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
-        if(strcmp(rootdir[0].c_str(), "/") != 0){
+        if(rootdir[0] != '/'){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
                 cerr << "error getting current working directory" << endl;
             }
-            rootdir = rootdir + (string)directory;
+            rootdir = (string)directory + rootdir;
+            cout << rootdir << endl;
         }
         if(filepath.length() == 1 && filepath.compare("/") == 0){
             filepath = "/index.html";
