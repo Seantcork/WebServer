@@ -163,7 +163,7 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(int socket, string rootdir, request_struct *rinfo) {
+int handle_request(int socket, string rootdir, shared_ptr rinfo) {
     DEBUG_PRINT("handling request\n");
     
     size_t fsize;
@@ -285,7 +285,7 @@ int handle_request(int socket, string rootdir, request_struct *rinfo) {
     }
 }
 
-void tokenize(char* msg, request_struct *rinfo) {
+void tokenize(char* msg, shared_ptr rinfo) {
     const char *request;
     request = strtok(msg, " ");
     int get = 0; // get line
