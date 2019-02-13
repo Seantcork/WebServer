@@ -320,6 +320,8 @@ void tokenize(char* msg, request_struct rinfo) {
         else if(!strncmp("\r", request, strlen("\r"))) {
             DEBUG_PRINT("READ 2 RETURNS");
             rinfo.done = 1;
+            cout << rinfo.done << "this is rinfo in tokenize:" << endl;
+            return;
         }
         request = strtok(NULL, " ");
         pos++;
