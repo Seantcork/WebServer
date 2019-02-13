@@ -274,6 +274,13 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
+        if(rootdir[0].compare("/") != 0){
+            char* directory[PATH_MAX];
+            getcwd(directory, sizeof(directory) == NULL){
+                cerr << "error getting current working directory" << endl;
+            }
+            rootdir = rootdir + (string)directory;
+        }
         if(filepath.length() == 1 && filepath.compare("/") == 0){
             filepath = "/index.html";
             filepath = rootdir + filepath;
