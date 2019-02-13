@@ -78,7 +78,7 @@ struct arg_struct {
 }args;
 
 mutex mtx;
-int conections = 0;
+int connections = 0;
 
 /*
 
@@ -430,7 +430,7 @@ void *new_connection(void *info) {
 	close(sock);
    
     mtx.lock();
-    conections--;
+    connections--;
     mtx.unlock();
     return NULL;
 
@@ -525,7 +525,7 @@ int main(int argc, char** argv) {
         }
        	
         mtx.lock();
-        conections++;
+        connections++;
         mtx.unlock();
         
         pthread_t new_thread;
