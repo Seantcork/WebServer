@@ -279,7 +279,7 @@ int handle_request(char *msg, int socket, string rootdir) {
             if(getcwd(directory, sizeof(directory)) == NULL){
                 cerr << "error getting current working directory" << endl;
             }
-            rootdir = (string)directory + rootdir;
+            rootdir = (string)directory + "/" + rootdir;
             cout << rootdir << endl;
         }
         if(filepath.length() == 1 && filepath.compare("/") == 0){
