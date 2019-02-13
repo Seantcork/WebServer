@@ -286,8 +286,9 @@ int handle_request(int socket, string rootdir, shared_ptr<request_struct> rinfo)
 }
 
 void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
-    const char *request;
-    request = strtok(msg, " ");
+    char *request;
+    char *rest = msg;
+    request = strtok_r(rest, " ", rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
@@ -313,7 +314,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             cerr << "in connection" << endl;
             con = 1;
         }
-        else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
+        else if(strncmp("Keep-Alive", request, strlen("Keep-Alive") == 0) && con) {
             cerr << "in alive" << endl;
             rinfo->calive = 1;
         }
@@ -329,7 +330,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
-        request = strtok(NULL, " ");
+        request = strtok_r(rest, " ", rest);
         pos++;
     }
 }
