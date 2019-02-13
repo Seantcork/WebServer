@@ -275,8 +275,8 @@ int handle_request(char *msg, int socket, string rootdir) {
 
     else {
         if(rootdir[0].compare("/") != 0){
-            char* directory[200];
-            getcwd(directory, sizeof(directory)) == NULL){
+            char directory[100];
+            if(getcwd(directory, sizeof(directory)) == NULL){
                 cerr << "error getting current working directory" << endl;
             }
             rootdir = rootdir + (string)directory;
