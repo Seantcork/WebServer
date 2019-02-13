@@ -274,7 +274,14 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
-        filepath = rootdir + filepath;
+        if(filepath.length() == 1 && filepath.compare("/") == 0){
+            filepath = "/index.html";
+            filepath = rootdir + filepath;
+        }
+        else{
+            filepath = rootdir + filepath;
+            
+        }
         reqfile.open(filepath, ios::binary);
         if (errno == ENOENT || reqfile.fail()) { // file does not exist
             //filepath = rootdir + filepath;
