@@ -163,20 +163,20 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(int socket, string rootdir, shared_ptr<request_struct> rinfo) {
+int handle_request(int socket, string rootdir, request_struct rinfo) {
     DEBUG_PRINT("handling request\n");
     
     size_t fsize;
     int goodfile = 0;
-    string filepath = rinfo->filepath;
+    string filepath = rinfo.filepath;
     ifstream reqfile;
     int goodreq = 0;
 
     const char *header;
-    if(rinfo->get && (rinfo->http_type.empty())) { // if get is bad or neither http req
+    if(rinfo.get && (rinfo.http_type.empty())) { // if get is bad or neither http req
         header = (char*)"400 Bad Request\r\n";
     } 
-    if(rinfo->http_type.back() == '1' && !(rinfo->cclose || rinfo->calive)) {
+    if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
         header = (char*)"400 Bad Request\r\n";
     }
 
@@ -216,7 +216,7 @@ int handle_request(int socket, string rootdir, shared_ptr<request_struct> rinfo)
             DEBUG_PRINT("HERE 1");
             goodfile = 1;
             string type_of_file = filetype(filepath);
-            string status = rinfo->http_type + " 200 OK\r\n";
+            string status = rinfo.http_type + " 200 OK\r\n";
             string date = get_date();
             
             string ctype = "Content-Type: " + type_of_file + "\r\n";
@@ -278,58 +278,68 @@ int handle_request(int socket, string rootdir, shared_ptr<request_struct> rinfo)
     }
                                          
     // tell to close the socket or not
-    if (rinfo->calive && goodreq) {
+    if (rinfo.calive && goodreq) {
         return 1;
     } else {
         return 0;
     }
 }
 
-void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
+void prints(request_struct &toprint) {
+  cout << "get " << toprint.get << endl;
+  cout << "http_type " << toprint.http_type << endl;
+  cout << "good " << toprint.good << endl;
+  cout << "filepath " << toprint.filepath << endl;
+  cout << "host " << toprint.host << endl;
+  cout << "calive " << toprint.calive << endl;
+  cout << "cclose  " << toprint.cclose << endl;
+  cout << "done  " << toprint.done << endl;
+}
+
+void tokenize(char* msg, request_struct &rinfo) {
     char *request;
     char *rest = msg;
     request = strtok_r(rest, " ", &rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
+    if (!strlen(msg)) {
+      rinfo.done = 1;
+      cout << "DONEEEEE" << endl;
+      return;
+    }
     while(request != NULL){
-        cerr << request << "this is the request" << endl;
+        cerr << "Processing token: " << request << endl;
         
         if(!strcmp("GET", request) && pos == 0){
             get = 1;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
-            cerr << rinfo->http_type << " this si http_type" << endl;
-            rinfo->http_type = "HTTP/1.0";
+            cerr << rinfo.http_type << " this si http_type" << endl;
+            rinfo.http_type = "HTTP/1.0";
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
-            rinfo->http_type = "HTTP/1.1";
-            cerr << rinfo->http_type << " this si http_type" << endl;
-            rinfo->calive = 1;
+            rinfo.http_type = "HTTP/1.1";
+            cerr << rinfo.http_type << " this si http_type" << endl;
+            rinfo.calive = 1;
         }
         else if(pos == 1 && get) {
-            rinfo->filepath = request;
-            cerr << rinfo->filepath << " this is filepath" << endl;
+            rinfo.filepath = request;
+            cerr << rinfo.filepath << " this is filepath" << endl;
         }
-        else if(strncmp("Connection:", request, strlen("Connection:")) == 0) {
+        else if(!strncmp("Connection:", request, strlen("Connection:"))) {
             cerr << "in connection" << endl;
             con = 1;
         }
-        else if(strncmp("Keep-Alive", request, strlen("Keep-Alive") == 0) && con) {
+        else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
             cerr << "in alive" << endl;
-            rinfo->calive = 1;
+            rinfo.calive = 1;
         }
         else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
-            rinfo->cclose = 1;
+            rinfo.cclose = 1;
         }
         else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
-            rinfo->host = 1;
-        }
-        else if(strncmp("\r", request, strlen("\r") == 0)) {
-            DEBUG_PRINT("READ 2 RETURNS");
-            rinfo->done = 1;
-            cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
-            return;
+            rinfo.host = 1;
         }
         request = strtok_r(rest, " ", &rest);
         pos++;
@@ -352,11 +362,11 @@ void *new_connection(void *info) {
     string rootdir = args->arg1;
     int sock = args->arg2;
     
-    shared_ptr<request_struct> rinfo(new request_struct);
+    request_struct rinfo;
     int connection = 1;
 	while(connection){
 
-        while(!rinfo->done) {
+        while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
             DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
@@ -365,8 +375,6 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
             }
             tokenize(req, rinfo);
-	    cout << rinfo->done << "rinfo stuif" << endl;
-
         }
 	    
 	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
