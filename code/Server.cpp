@@ -285,7 +285,7 @@ int handle_request(int socket, string rootdir, request_struct *rinfo) {
     }
 }
 
-void tokenize(char* msg, request_struct *rinfo) {
+void tokenize(char* msg, unique_ptr<request_struct> rinfo) {
     const char *request;
     request = strtok(msg, " ");
     int get = 0; // get line
