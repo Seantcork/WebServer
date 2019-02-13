@@ -274,7 +274,7 @@ int handle_request(char *msg, int socket, string rootdir) {
     } 
 
     else {
-        if(rootdir[0].compare("/") != 0){
+        if(strcmp(rootdir[0], "/") != 0){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
                 cerr << "error getting current working directory" << endl;
