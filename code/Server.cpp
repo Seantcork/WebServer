@@ -345,7 +345,7 @@ void *new_connection(void *info) {
     string rootdir = args->arg1;
     int sock = args->arg2;
     
-    request_struct *rinfo = new request_struct;
+    shared_ptr<request_struct> rinfo = new request_struct;
     int connection = 1;
 	while(connection){
 
