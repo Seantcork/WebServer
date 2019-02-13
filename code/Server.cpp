@@ -78,6 +78,17 @@ struct arg_struct {
     int arg2;
 }args;
 
+struct request_struct {
+    int get = 0;
+    string http_type = "";
+    int good = 0;
+    string filepath = "";
+    int host = 0;
+    int calive = 0;
+    int cclose = 0;
+    int done = 0;
+};
+
 mutex mtx;
 int connections = 0;
 
@@ -108,6 +119,17 @@ string filetype(string path) { //utils
 }
 
 
+int get_file_size(std::string filename) // path to file
+{
+    FILE *p_file = NULL;
+    p_file = fopen(filename.c_str(),"rb");
+    fseek(p_file,0,SEEK_END);
+    int size = ftell(p_file);
+    fclose(p_file);
+    return size;
+}
+
+
 /*
 
 Use: Returns a string with the current date and time
@@ -129,95 +151,6 @@ string get_date() { //utils
 
 /*
 
-Use: This Function takes the filepath and the HTTP type and 
-creates and returns an appropirate response to the HTTP request.
-Parameters: http_type which is either http/1.0 or http/1.1 and filepath
-which is the filepath from the directory
-Return value: A char* buffer which represents the HTTP response that the server is going to send.
-
-*/
-char *generate_response(string http_type, string filepath, string rootdir) {
-    DEBUG_PRINT("GENERATING RESPONSE");
-    string response;
-    string status;
-    string ctype;
-    string clen;
-    string date;
-    string type_of_file = filetype(filepath);
-    
-
-    if (type_of_file.compare("cant handle request") == 0){
-        	return (char*)"404 Bad Request\n";
-    }
-
-    ifstream file;
-    file.open(filepath, std::ios::binary | std::ios::ate);
-    if (file.fail()) {
-        filepath = rootdir + filepath;
-        cout << "with rootdir : " << filepath << endl;
-        DEBUG_PRINT("Appending RootDir");
-        file.open(filepath, std::ios::binary | std::ios::ate);
-        if (file.fail()) {
-            //file does not exist 404
-            DEBUG_PRINT("HERE");
-            return (char*)"404 Not Found\n";
-        }
-    }
-   
-    streamsize fsize = file.tellg();
-    file.seekg(0, ios::beg);
-    
-    cout << "FILESIZE: " << fsize<< endl;
-    
-    if (fsize > MAXURI) {
-        //handle splitting of response
-    }
-    
-    std::vector<char> fdata(fsize);
-
-    //checks to see if user can access files
-//    if(access(filepath, R_OK) < 0) {
-//        return (char*)"403 Forbidden";
-//    }
-
-    
-    if (file.read(fdata.data(), fdata.size())) { //data successfully read
-    	
-        status = http_type + " 200 OK\r\n";
-        date = get_date();
-        
-        ctype = "Content-Type: " + type_of_file + "\r\n";
-        cerr << type_of_file << endl;
-       
-        clen = "Content-Length: " + to_string(fsize) + "\r\n";
-        response = status + date + ctype + clen + "\r\n" + fdata.data() + "\r\n";
-        
-        int n = response.length();
-        char *char_array = new char[n+1];
-        strcpy(char_array, response.c_str());
-        file.close();
-        return char_array;
-    } else {
-        // unable to read (permissions)
-        file.close();
-        return (char*)"403 Forbidden";
-    }
-    file.close();
-    return (char*)"ERROR";
-}
-
-int get_file_size(std::string filename) // path to file
-{
-    FILE *p_file = NULL;
-    p_file = fopen(filename.c_str(),"rb");
-    fseek(p_file,0,SEEK_END);
-    int size = ftell(p_file);
-    fclose(p_file);
-    return size;
-}
-
-/*
-
 Use: This function takes the message recieved from the socket and the socket number. First it determines
 if the GET request is correctly formated and that the HTTP request is a GET request. It then parses the filepath of
 the HTTP request. If the HTTP request is formatted correctly the function calls Generate Response which generates an
@@ -229,50 +162,20 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(char *msg, int socket, string rootdir) {
+int handle_request(int socket, string rootdir, ) {
     DEBUG_PRINT("handling request\n");
     
-    int get = 0, http1 = 0, http11 = 0, goodreq = 1, goodfile = 0;
-    string http_type;
-    string filepath = "";
-    ifstream reqfile;
-    streamsize fsize;
+    size_t fsize;
+    int goodfile = 0;
+    string filepath = rinfo.filepath;
+
     const char *header;
-    
-    // Parse request
-    const char *request;
-    request = strtok(msg, " ");
-    int pos = 0; // order of req words
-    while(request != NULL){
-    	cout << request << endl;
-        if(!strcmp("GET", request) && pos == 0){
-        	DEBUG_PRINT("IN GET")
-            get = 1;
-        }
-        else if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2){
-        	DEBUG_PRINT("IN HTTP/1.0")
-            http1 = 1;
-            http_type = "HTTP/1.0";
-        }
-        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2){
-            http11 = 1;
-            http_type = "HTTP/1.1";
-        }
-        else if(pos == 1) {
-            filepath = request;
-            printf("FILEPATH SET TO: ");
-            cout << filepath << endl;
-        }
-        request = strtok(NULL, " ");
-        pos++;
-    }
-    
-    DEBUG_PRINT("get: %d, h0: %d, h1 %d", get, http1, http11);
-    
-    if(!get || !(http1 || http11)) { // if get is bad or neither http req
-        goodreq = 0;
+    if(rinfo.get && (rinfo.http_type.empty())) { // if get is bad or neither http req
         header = (char*)"400 Bad Request\r\n";
     } 
+    if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
+        header = (char*)"400 Bad Request\r\n";
+    }
 
     else {
         if(rootdir[0] != '/'){
@@ -287,36 +190,29 @@ int handle_request(char *msg, int socket, string rootdir) {
             filepath = "/index.html";
             filepath = rootdir + filepath;
         }
-        else{
+        else {
             filepath = rootdir + filepath;
-            
         }
-        reqfile.open(filepath, ios::binary);
-        if (errno == ENOENT || reqfile.fail()) { // file does not exist
-            //filepath = rootdir + filepath;
-            DEBUG_PRINT("Failed: appending rootDir");
-            reqfile.open(filepath, ios::binary);
-            if (errno == ENOENT|| reqfile.fail()) { // file does not exist
-                DEBUG_PRINT("Failed to find file");
-                header = (char*)"404 Not Found\r\n";  
-            }
-        //does this jump clear the errno
-        } else if (errno == EACCES) { // permission denied
+
+        open(filepath, ios::binary);
+        if (errno == ENOENT) { // file does not exist
+            DEBUG_PRINT("File does not exist");
+            header = (char*)"404 Not Found\r\n";  
+        } 
+        else if (errno == EACCES) { // permission denied
             DEBUG_PRINT("Failed read access");
             header = (char*)"403 Forbidden\r\n";
         }
-
         else if (!filetype(filepath).compare("cant handle request")) {
             DEBUG_PRINT("Incompatable FileExtension");
             header = (char*)"404 Bad Request\r\n";
         }
 
         else {
-            DEBUG_PRINT("HERE1");
-
+            DEBUG_PRINT("HERE 1");
             goodfile = 1;
             string type_of_file = filetype(filepath);
-            string status = http_type + " 200 OK\r\n";
+            string status = rinfo.http_type + " 200 OK\r\n";
             string date = get_date();
             
             string ctype = "Content-Type: " + type_of_file + "\r\n";
@@ -333,7 +229,6 @@ int handle_request(char *msg, int socket, string rootdir) {
         }
 
     }
-    reqfile.close();
 
     size_t bytes_sent;
 
@@ -386,6 +281,47 @@ int handle_request(char *msg, int socket, string rootdir) {
     }
 }
 
+void tokenize(char* msg, request_struct rinfo) {
+    const char *request;
+    request = strtok(msg, " ");
+    int get = 0; // get line
+    int con = 0; // connection line
+    int pos = 0; // order of req words
+    while(request != NULL){
+        cout << request << endl;
+        if(!strcmp("GET", request) && pos == 0){
+            get = 1;
+        }
+        if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
+            rinfo.http_type = "HTTP/1.0";
+        }
+        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
+            rinfo.http_type = "HTTP/1.1";
+        }
+        else if(pos == 1 && get) {
+            rinfo.filepath = request;
+        }
+        else if(!strncmp("Connection:", request, strlen("Connection:")) && pos == 0) {
+            con = 1;
+        }
+        else if(!strncmp("keep-alive", request, strlen("keep-alive")) && pos == 1 && con) {
+            rinfo.calive = 1;
+        }
+        else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
+            rinfo.cclose = 1;
+        }
+        else if(!strncmp("Host", request, strlen("Host")) && pos = 0) {
+            rinfo.host = 1;
+        }
+        else if(!strncmp("\r", request, strlen("\r"))) {
+            DEBUG_PRINT("READ 2 RETURNS");
+            rinfo.end = 1;
+        }
+        request = strtok(NULL, " ");
+        pos++;
+    }
+}
+
 /*
 
 Purpose: Establish a new socket for a incoming conncetion and call functions to deal with
@@ -400,19 +336,24 @@ void *new_connection(void *info) {
     
     struct arg_struct *args = (struct arg_struct *)info;
     string rootdir = args->arg1;
-    cout << rootdir << "this is rootdir" << endl;
     int sock = args->arg2;
     
+    request_struct rinfo;
     int connection = 1;
 	while(connection){
-        
-	    char req[MAXREQ] = {0};
-	    int n = read(sock, req, MAXURI);
-	    if (n < 0) {
-	        cerr << "error on read!/n" << endl;
-	    }
-	    DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
-	    if (!handle_request(req, sock, rootdir)) { // if 0 (http1.0) close the socket
+
+        while(!rinfo.end) {
+            char req[MAXREQ] = {0};
+            int n = recv(sock, req, MAXURI);
+            DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
+
+            if (n < 0) {
+                cerr << "error on read!/n" << endl;
+            }
+            tokenize(req, rinfo);
+        }
+	    
+	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
         if(connections > 5){
@@ -421,6 +362,7 @@ void *new_connection(void *info) {
         else if(connections > 10){
             time.tv_sec = 10;
         }
+
         cout << "this is the number of connections" << connections << endl;
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
