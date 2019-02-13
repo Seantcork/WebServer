@@ -288,7 +288,7 @@ int handle_request(int socket, string rootdir, shared_ptr<request_struct> rinfo)
 void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
     char *request;
     char *rest = msg;
-    request = strtok_r(rest, " ", rest);
+    request = strtok_r(rest, " ", &rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
@@ -330,7 +330,7 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             cerr << rinfo->done << "this is rinfo in tokenize:" << endl;
             return;
         }
-        request = strtok_r(rest, " ", rest);
+        request = strtok_r(rest, " ", &rest);
         pos++;
     }
 }
