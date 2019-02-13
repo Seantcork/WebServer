@@ -309,10 +309,10 @@ void tokenize(char* msg, shared_ptr<request_struct> rinfo) {
             rinfo->filepath = request;
             cout << rinfo->filepath << " this is filepath" << endl;
         }
-        else if(!strncmp("Connection:", request, strlen("Connection:")) && pos == 0) {
+        else if(!strncmp("Connection:", request, strlen("Connection:"))) {
             con = 1;
         }
-        else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && pos == 1 && con) {
+        else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
             cout << "in alive" << endl;
             rinfo->calive = 1;
         }
