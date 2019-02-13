@@ -524,7 +524,7 @@ int main(int argc, char** argv) {
             return -1;
         }
        	
-        mtx.lock()
+        mtx.lock();
         conections++;
         mtx.unlock();
         
