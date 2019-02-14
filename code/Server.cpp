@@ -406,13 +406,13 @@ void *new_connection(void *info) {
             }
             if (!strlen(req)) {
                 DEBUG_PRINT("message of length zero");
-                continue;
+                connection = 0;
             }
             tokenize_msg(req, rinfo);
             prints(rinfo);
         }
 	    
-	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
+	    if (!handle_request(sock, rootdir, rinfo) && connection == 1) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
         reset_info(rinfo);
