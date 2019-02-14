@@ -392,7 +392,7 @@ void *new_connection(void *info) {
     
     request_struct rinfo;
     int connection = 1;
-	while(connection){
+	while(connection){ // right now we are just spinning if we dont close socket, constantly readigng \n
 
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
@@ -403,13 +403,13 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
                 continue;
             }
-            if (strlen(req)) {
+            if (strlen(req)) { // if length of message >0
                 tokenize_msg(req, rinfo);
                 prints(rinfo);
             }
             else {
                 DEBUG_PRINT("message of length zero");
-                connection = 1;
+                connection = 0;
             }
         }
 	    
@@ -424,7 +424,7 @@ void *new_connection(void *info) {
             time.tv_sec = 10;
         }
 
-        cout << "this is the number of connections" << connections << endl;
+        cout << "Number of Connections " << connections << endl;
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
