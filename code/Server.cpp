@@ -82,13 +82,22 @@ struct arg_struct {
 struct request_struct {
     int get = 0;
     string http_type = "";
-    int good = 0;
     string filepath = "";
     int host = 0;
     int calive = 0;
     int cclose = 0;
     int done = 0;
 };
+
+void reset_info(request_struct &info){
+    int get = 0;
+    string http_type = "";
+    string filepath = "";
+    int host = 0;
+    int calive = 0;
+    int cclose = 0;
+    int done = 0;
+}
 
 mutex mtx;
 int connections = 0;
@@ -163,7 +172,7 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 
 */
 
-int handle_request(int socket, string rootdir, request_struct rinfo) {
+int handle_request(int socket, string rootdir, request_struct &rinfo) {
     DEBUG_PRINT("handling request\n");
     
     size_t fsize;
@@ -279,6 +288,7 @@ int handle_request(int socket, string rootdir, request_struct rinfo) {
                                          
     // tell to close the socket or not
     if (rinfo.calive && goodreq) {
+        DEBUG_PRINT("KEEP ALIVE");
         return 1;
     } else {
         return 0;
@@ -288,7 +298,6 @@ int handle_request(int socket, string rootdir, request_struct rinfo) {
 void prints(request_struct &toprint) {
   cout << "get " << toprint.get << endl;
   cout << "http_type " << toprint.http_type << endl;
-  cout << "good " << toprint.good << endl;
   cout << "filepath " << toprint.filepath << endl;
   cout << "host " << toprint.host << endl;
   cout << "calive " << toprint.calive << endl;
@@ -403,6 +412,7 @@ void *new_connection(void *info) {
         }
 	    
 	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
+            reset_info(rinfo);
 	        connection = 0;
 	    }
         if(connections > 5){
