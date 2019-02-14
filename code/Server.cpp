@@ -382,6 +382,7 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
             }
             tokenize(req, rinfo);
+            print(rinfo);
         }
 	    
 	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
