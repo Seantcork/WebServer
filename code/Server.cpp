@@ -404,6 +404,10 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
                 continue;
             }
+            if (!strlen(req)) {
+                DEBUG_PRINT("message of length zero");
+                continue;
+            }
             tokenize_msg(req, rinfo);
             prints(rinfo);
         }
