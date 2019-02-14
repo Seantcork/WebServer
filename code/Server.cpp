@@ -312,7 +312,10 @@ void tokenize(char* msg, request_struct &rinfo) {
     while(request != NULL){
         cerr << "Processing token: " << request << endl;
 
-        if(strncmp("\r", request, strlen("\r"))){
+        if(strncmp("\r\n", request, strlen("\r\n"))){
+            cerr << "this is a thing calld slash r and slash n" << endl;
+        }
+        else if(strncmp("\r", request, strlen("\r"))){
             cerr << "this is a thing calld slash r" << endl;
         }
         
