@@ -401,7 +401,7 @@ void *new_connection(void *info) {
             if (n < 0) {
                 cerr << "error on read!/n" << endl;
             }
-            tokenize(req, rinfo);
+            tokenize_msg(req, rinfo);
             prints(rinfo);
         }
 	    
