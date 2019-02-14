@@ -413,9 +413,9 @@ void *new_connection(void *info) {
         }
 	    
 	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
-            reset_info(rinfo);
 	        connection = 0;
 	    }
+        reset_info(rinfo);
         if(connections > 5){
             time.tv_sec = 20;
         }
