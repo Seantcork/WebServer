@@ -362,15 +362,10 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     char *request;
     char *rest = msg;
     request = strtok_r(rest, "\r\n", &rest);
-    int get = 0; // get line
-    int con = 0; // connection line
-    int pos = 0; // order of req words
     while(request != NULL){
         cerr << "Processing line token: " << request << endl;
         tokenize_line(request, rinfo);
-        
         request = strtok_r(rest, "\r\n", &rest);
-        pos++;
     }
     if (!strlen(msg)) {
         DEBUG_PRINT("We have an empty msg")
