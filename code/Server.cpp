@@ -318,6 +318,7 @@ void tokenize(char* msg, request_struct &rinfo) {
         
         if(!strcmp("GET", request) && pos == 0){
             get = 1;
+            rinfo.get = 1;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
             rinfo.http_type = "HTTP/1.0";
