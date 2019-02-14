@@ -409,7 +409,7 @@ void *new_connection(void *info) {
             }
             else {
                 DEBUG_PRINT("message of length zero");
-                connection = 0;
+                connection = 1;
             }
         }
 	    
