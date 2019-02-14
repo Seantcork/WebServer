@@ -341,6 +341,13 @@ void tokenize(char* msg, request_struct &rinfo) {
         else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
             rinfo.host = 1;
         }
+        else if(!strncmp("\r", request, strlen("\r"))) {
+            DEBUG_PRINT("READ 2 RETURNS");
+            rinfo.done = 1;
+            cerr << rinfo.done << "this is rinfo in tokenize:" << endl;
+            cerr << "DONNNEEE" << endl;
+            return;
+        }
         request = strtok_r(rest, " ", &rest);
         pos++;
     }
