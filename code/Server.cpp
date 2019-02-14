@@ -279,7 +279,9 @@ int handle_request(int socket, string rootdir, request_struct rinfo) {
                                          
     // tell to close the socket or not
     if (rinfo.calive && goodreq) {
+        cout << "what is this" << endl;
         return 1;
+
     } else {
         return 0;
     }
