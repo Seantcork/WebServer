@@ -296,8 +296,8 @@ void prints(request_struct &toprint) {
   cout << "done  " << toprint.done << endl;
 }
 
-void tokenize(char* msg, request_struct &rinfo) {
-    cout << "youve called tokenize" << endl;
+void tokenize_line(char* msg, request_struct &rinfo) {
+    cout << "youve called tokenize Line" << endl;
     char *request;
     char *rest = msg;
     cout << msg << "this is message" << endl;
@@ -307,42 +307,34 @@ void tokenize(char* msg, request_struct &rinfo) {
     int pos = 0; // order of req words
     if (!strlen(msg)) {
       rinfo.done = 1;
-      cout << "DONEEEEE" << endl;
+      cout << "recieved empty line" << endl;
       return;
     }
     while(request != NULL){
         cerr << "Processing token: " << request << endl;
-
-        if(strncmp("\r\n", request, strlen("\r\n")) ==0){
-            cerr << "this is a thing calld slash r and slash n" << endl;
-        }
-        else if(strncmp("\r", request, strlen("\r")) == 0){
-            cerr << "this is a thing calld slash r" << endl;
-        }
-        
         if(!strcmp("GET", request) && pos == 0){
+            DEBUG_PRINT("Reading GET line");
             get = 1;
             rinfo.get = 1;
-        }
-        if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
-            rinfo.http_type = "HTTP/1.0";
-            cerr << rinfo.http_type << " this si http_type" << endl;
-        }
-        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
-            rinfo.http_type = "HTTP/1.1";
-            cerr << rinfo.http_type << " this si http_type" << endl;
-            rinfo.calive = 1;
         }
         else if(pos == 1 && get) {
             rinfo.filepath = request;
             cerr << rinfo.filepath << " this is filepath" << endl;
         }
+        if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
+            rinfo.http_type = "HTTP/1.0";
+            cerr << rinfo.http_type << " this is http_type" << endl;
+        }
+        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
+            rinfo.http_type = "HTTP/1.1";
+            cerr << rinfo.http_type << " this is http_type" << endl;
+            rinfo.calive = 1;
+        }
         else if(!strncmp("Connection:", request, strlen("Connection:"))) {
-            cerr << "in connection" << endl;
+            DEBUG_PRINT("Reading Connection line");
             con = 1;
         }
         else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
-            cerr << "in alive" << endl;
             rinfo.calive = 1;
         }
         else if(!strncmp("close", request, strlen("close")) && pos == 1 && con) {
@@ -351,14 +343,31 @@ void tokenize(char* msg, request_struct &rinfo) {
         else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
             rinfo.host = 1;
         }
-        else if(!strncmp("\r\n", request, strlen("\r\n"))) {
-            DEBUG_PRINT("READ 2 RETURNS");
-            rinfo.done = 1;
-            cerr << rinfo.done << "this is rinfo in tokenize:" << endl;
-            cerr << "DONNNEEE" << endl;
-            return;
-        }
         request = strtok_r(rest, " ", &rest);
+        pos++;
+    }
+}
+
+
+void tokenize_msg(char* msg, request_struct &rinfo) {
+    cout << "youve called tokenize" << endl;
+    char *request;
+    char *rest = msg;
+    cout << msg << "this is message" << endl;
+    request = strtok_r(rest, "\r\n", &rest);
+    int get = 0; // get line
+    int con = 0; // connection line
+    int pos = 0; // order of req words
+    if (!strlen(msg)) {
+        DEBUG_PRINT("We have an empty msg")
+      rinfo.done = 1;
+      return;
+    }
+    while(request != NULL){
+        cerr << "Processing line token: " << request << endl;
+        tokenize_line(request, rinfo);
+        
+        request = strtok_r(rest, "\r\n", &rest);
         pos++;
     }
 }
