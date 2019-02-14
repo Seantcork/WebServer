@@ -300,7 +300,7 @@ void tokenize(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize" << endl;
     char *request;
     char *rest = msg;
-    cout << msg << "this is message" endl;
+    cout << msg << "this is message" << endl;
     request = strtok_r(rest, " ", &rest);
     int get = 0; // get line
     int con = 0; // connection line
