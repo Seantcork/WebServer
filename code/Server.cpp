@@ -297,6 +297,7 @@ void prints(request_struct &toprint) {
 }
 
 void tokenize(char* msg, request_struct &rinfo) {
+    cout << "youve called tokenize" << endl;
     char *request;
     char *rest = msg;
     request = strtok_r(rest, " ", &rest);
@@ -341,7 +342,7 @@ void tokenize(char* msg, request_struct &rinfo) {
         else if(!strncmp("Host", request, strlen("Host")) && pos == 0) {
             rinfo.host = 1;
         }
-        else if(!strncmp("\r", request, strlen("\r"))) {
+        else if(!strncmp("\r\n", request, strlen("\r\n"))) {
             DEBUG_PRINT("READ 2 RETURNS");
             rinfo.done = 1;
             cerr << rinfo.done << "this is rinfo in tokenize:" << endl;
@@ -362,6 +363,7 @@ Return value: none
 
 */
 void *new_connection(void *info) {
+
     struct timeval time;
     time.tv_sec = 40;
     
