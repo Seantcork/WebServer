@@ -298,11 +298,6 @@ void prints(request_struct &toprint) {
 
 void tokenize_line(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize Line" << endl;
-    if (!strlen(msg)) {
-      rinfo.done = 1;
-      cout << "recieved empty line" << endl;
-      return;
-    }
     char *request;
     char *rest = msg;
     request = strtok_r(rest, " ", &rest);
@@ -351,13 +346,11 @@ void tokenize_line(char* msg, request_struct &rinfo) {
 
 void tokenize_msg(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize" << endl;
+    if (strstr(msg, "\r\n\r\n") != NULL) {
+        rinfo.done = 1;
+    }
     char *request;
     char *rest = msg;
-    if (!strlen(msg)) {
-        DEBUG_PRINT("We have an empty msg")
-      rinfo.done = 1;
-      return;
-    }
     request = strtok_r(rest, "\r\n", &rest);
     int get = 0; // get line
     int con = 0; // connection line
