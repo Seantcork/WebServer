@@ -300,11 +300,11 @@ void tokenize(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize" << endl;
     char *request;
     char *rest = msg;
+    cout << msg << "this is message" endl;
     request = strtok_r(rest, " ", &rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
-    cout << msg << endl;
     if (!strlen(msg)) {
       rinfo.done = 1;
       cout << "DONEEEEE" << endl;
