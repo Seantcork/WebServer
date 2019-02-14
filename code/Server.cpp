@@ -290,6 +290,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     if (rinfo.calive && goodreq) {
         DEBUG_PRINT("KEEP ALIVE");
         return 1;
+
     } else {
         return 0;
     }
