@@ -298,18 +298,18 @@ void prints(request_struct &toprint) {
 
 void tokenize_line(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize Line" << endl;
-    char *request;
-    char *rest = msg;
-    cout << msg << "this is message" << endl;
-    request = strtok_r(rest, " ", &rest);
-    int get = 0; // get line
-    int con = 0; // connection line
-    int pos = 0; // order of req words
     if (!strlen(msg)) {
       rinfo.done = 1;
       cout << "recieved empty line" << endl;
       return;
     }
+    char *request;
+    char *rest = msg;
+    request = strtok_r(rest, " ", &rest);
+    int get = 0; // get line
+    int con = 0; // connection line
+    int pos = 0; // order of req words
+
     while(request != NULL){
         cerr << "Processing token: " << request << endl;
         if(!strcmp("GET", request) && pos == 0){
@@ -353,16 +353,15 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize" << endl;
     char *request;
     char *rest = msg;
-    cout << msg << "this is message" << endl;
-    request = strtok_r(rest, "\r\n", &rest);
-    int get = 0; // get line
-    int con = 0; // connection line
-    int pos = 0; // order of req words
     if (!strlen(msg)) {
         DEBUG_PRINT("We have an empty msg")
       rinfo.done = 1;
       return;
     }
+    request = strtok_r(rest, "\r\n", &rest);
+    int get = 0; // get line
+    int con = 0; // connection line
+    int pos = 0; // order of req words
     while(request != NULL){
         cerr << "Processing line token: " << request << endl;
         tokenize_line(request, rinfo);
