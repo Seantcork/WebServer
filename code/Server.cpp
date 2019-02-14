@@ -368,7 +368,6 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
         request = strtok_r(rest, "\r\n", &rest);
     }
     if (!strlen(msg)) {
-        DEBUG_PRINT("We have an empty msg")
       rinfo.done = 1;
       return;
     }
@@ -398,7 +397,7 @@ void *new_connection(void *info) {
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
+            DEBUG_PRINT("MESSAGE RECIEVED: ->%s\n<-", req);
 
             if (n < 0) {
                 cerr << "error on read!/n" << endl;
