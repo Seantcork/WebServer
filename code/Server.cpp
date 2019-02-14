@@ -311,13 +311,17 @@ void tokenize(char* msg, request_struct &rinfo) {
     }
     while(request != NULL){
         cerr << "Processing token: " << request << endl;
+
+        if(strncmp("\r", request, strlen("\r"))){
+            cerr << "this is \r" << endl;
+        }
         
         if(!strcmp("GET", request) && pos == 0){
             get = 1;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
-            cerr << rinfo.http_type << " this si http_type" << endl;
             rinfo.http_type = "HTTP/1.0";
+            cerr << rinfo.http_type << " this si http_type" << endl;
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
             rinfo.http_type = "HTTP/1.1";
