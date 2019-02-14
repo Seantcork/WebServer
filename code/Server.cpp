@@ -90,13 +90,13 @@ struct request_struct {
 };
 
 void reset_info(request_struct &info){
-    int get = 0;
-    string http_type = "";
-    string filepath = "";
-    int host = 0;
-    int calive = 0;
-    int cclose = 0;
-    int done = 0;
+    info.get = 0;
+    info.http_type = "";
+    info.filepath = "";
+    info.host = 0;
+    info.calive = 0;
+    info.cclose = 0;
+    info.done = 0;
 }
 
 mutex mtx;
