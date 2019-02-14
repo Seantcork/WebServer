@@ -404,12 +404,14 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
                 continue;
             }
-            if (!strlen(req)) {
+            if (strlen(req)) {
+                tokenize_msg(req, rinfo);
+                prints(rinfo);
+            }
+            else {
                 DEBUG_PRINT("message of length zero");
                 connection = 0;
             }
-            tokenize_msg(req, rinfo);
-            prints(rinfo);
         }
 	    
 	    if (!handle_request(sock, rootdir, rinfo) && connection == 1) { // if 0 (http1.0) close the socket
