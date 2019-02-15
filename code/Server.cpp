@@ -372,11 +372,6 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
         request = strtok_r(rest, "\r\n", &rest);
         pos++;
     }
-    if (!strlen(msg)) {
-        DEBUG_PRINT("We have an empty msg")
-      rinfo.done = 1;
-      return;
-    }
 }
 
 /*
