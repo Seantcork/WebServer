@@ -362,15 +362,10 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     char *request;
     char *rest = msg;
     request = strtok_r(rest, "\r\n", &rest);
-    int get = 0; // get line
-    int con = 0; // connection line
-    int pos = 0; // order of req words
     while(request != NULL){
         cerr << "Processing line token: " << request << endl;
         tokenize_line(request, rinfo);
-        
         request = strtok_r(rest, "\r\n", &rest);
-        pos++;
     }
 }
 
@@ -393,21 +388,28 @@ void *new_connection(void *info) {
     
     request_struct rinfo;
     int connection = 1;
-	while(connection){
+	while(connection){ // right now we are just spinning if we dont close socket, constantly readigng \n
 
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            DEBUG_PRINT("MESSAGE RECIEVED: %s\n", req);
+            DEBUG_PRINT("MESSAGE RECIEVED: ->%s\n<-", req);
 
             if (n < 0) {
                 cerr << "error on read!/n" << endl;
+                continue;
             }
-            tokenize_msg(req, rinfo);
-            prints(rinfo);
+            if (strlen(req)) { // if length of message >0
+                tokenize_msg(req, rinfo);
+                prints(rinfo);
+            }
+            else {
+                DEBUG_PRINT("message of length zero");
+                connection = 0;
+            }
         }
 	    
-	    if (!handle_request(sock, rootdir, rinfo)) { // if 0 (http1.0) close the socket
+	    if (!handle_request(sock, rootdir, rinfo) && connection == 1) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
         reset_info(rinfo);
@@ -418,7 +420,7 @@ void *new_connection(void *info) {
             time.tv_sec = 10;
         }
 
-        cout << "this is the number of connections" << connections << endl;
+        cout << "Number of Connections " << connections << endl;
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
