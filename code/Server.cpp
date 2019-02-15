@@ -1,22 +1,13 @@
 // 
 //  ServerProgram.cpp
 //
-//
 //  Created by Ian Squiers & Sean Cork on 1/30/19.
 //
 
 /*
  
  IMPLIMENTATION TODO:
-    http 1.1 functionality (take multiple requests)
-    check thread exiting
-
-     Seting mutex when sending and writing data in HTTP/1.1
-
-    no guarentee that we will send everything with the just one send especially in HTtp1.1.
-    need to determine how to do that.
-     100 Continue (extra)
-     make sure we recieve the whole message
+    Make sure cclose is considered
      
  COMPILE ISSUES:
     some issue printing strings with DEBUGPRINT
@@ -56,18 +47,23 @@
 #include <sys/sendfile.h>
 
 
+//Constants used to define easier printing statmenets
+
 #define DEBUG_ME 1
 #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
 printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 fflush(stdout);}
 
 
+//max request buffer
 const int MAXURI = 4000;
 const int MAXREQ = 4000; // good RoT for this?
 
 using namespace std;
 
-static map<string, string> ftypes = { //utils
+
+//utils
+static map<string, string> ftypes = {
     { ".gif", "image/gif"  },
     { ".jpg", "image/jpg"  },
     { ".txt", "text/plain" },
@@ -89,7 +85,7 @@ struct request_struct {
     int done = 0;
 };
 
-void reset_info(request_struct &info){
+void reset_info(request_struct &info) {
     info.get = 0;
     info.http_type = "";
     info.filepath = "";
@@ -161,7 +157,7 @@ string get_date() { //utils
 
 /*
 
-Use: This function takes the message recieved from the socket and the socket number. First it determines
+Purpose: This function takes the message recieved from the socket and the socket number. First it determines
 if the GET request is correctly formated and that the HTTP request is a GET request. It then parses the filepath of
 the HTTP request. If the HTTP request is formatted correctly the function calls Generate Response which generates an
 HTTP message to send. The function then attempts to send the message to the client. If request is HTTP/1.0 it closes
@@ -175,22 +171,30 @@ Return value: 1 if http1.1 and good request, otherwise return 0.
 int handle_request(int socket, string rootdir, request_struct &rinfo) {
     DEBUG_PRINT("handling request\n");
     
+
+    //flags
     size_t fsize;
     int goodfile = 0;
     string filepath = rinfo.filepath;
     ifstream reqfile;
     int goodreq = 0;
-
     const char *header;
-    if(rinfo.get && (rinfo.http_type.empty())) { // if get is bad or neither http req
+    
+
+    // if get is bad or neither http req
+    if(rinfo.get && (rinfo.http_type.empty())) {
         header = (char*)"400 Bad Request\r\n";
     } 
     if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
         header = (char*)"400 Bad Request\r\n";
     }
 
+    //if good request
     else {
-	goodreq = 1;
+    	//set flag
+		goodreq = 1;
+
+		//if rootdir is not absolute set path to relatiuce directory
         if(rootdir[0] != '/'){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
@@ -199,6 +203,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
             rootdir = (string)directory + "/" + rootdir;
             cout << rootdir << endl;
         }
+        //if filepath is just a backline fetch index.html
         if(filepath.length() == 1 && filepath.compare("/") == 0){
             filepath = "/index.html";
             filepath = rootdir + filepath;
@@ -207,6 +212,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
             filepath = rootdir + filepath;
         }
 
+        //openfile
         reqfile.open(filepath, ios::binary);
         if (errno == ENOENT || reqfile.fail()) { // file does not exist
             DEBUG_PRINT("File does not exist");
@@ -222,6 +228,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
         }
 
         else {
+        	//Set headers
             DEBUG_PRINT("HERE 1");
             goodfile = 1;
             string type_of_file = filetype(filepath);
@@ -252,7 +259,6 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 		cerr << "Errror sending headers" << endl;
 		return -1;
 	}
-
 	bytes_left -= bytes_sent;
 
 	while (bytes_left > 0){
@@ -260,8 +266,11 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
+    
+	//now use senfile
     if (goodfile) {
 
+    	//set constants and filepath
         int n = filepath.length();
         char *chars = new char[n+1];
         strcpy(chars, filepath.c_str());
@@ -283,7 +292,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
         }
 
         reqfile.close();
-        DEBUG_PRINT("wrote header");
+        DEBUG_PRINT("data");
     }
                                          
     // tell to close the socket or not
@@ -296,6 +305,15 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     }
 }
 
+
+/*
+
+Purpose: this function is a sinple debugging function that prints our struct that contains all of the information that
+We need for our program:
+Parameters: The struct that contains the relevant information that is needed.
+Return Value: none
+
+*/
 void prints(request_struct &toprint) {
   cout << "get " << toprint.get << endl;
   cout << "http_type " << toprint.http_type << endl;
@@ -306,31 +324,43 @@ void prints(request_struct &toprint) {
   cout << "done  " << toprint.done << endl;
 }
 
+/*
+
+Purpose: This function takes a line of an HTTP request and correctly identifies if an HTTP request is correct or not
+Parameters: A char buffer that contains a line of the HTTP request and a sturct that contians the information regarding
+each Header
+Return value: none
+
+*/
 void tokenize_line(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize Line" << endl;
+    //Copy char buffer
     char *request;
     char *rest = msg;
+    //Parse by Space
     request = strtok_r(rest, " ", &rest);
     int get = 0; // get line
     int con = 0; // connection line
     int pos = 0; // order of req words
 
-    while(request != NULL){
+    //while there still tokens
+    while(request != NULL) {
         cerr << "Processing token: " << request << endl;
         if(!strcmp("GET", request) && pos == 0){
             DEBUG_PRINT("Reading GET line");
             get = 1;
             rinfo.get = 1;
         }
+        //Get filepath
         else if(pos == 1 && get) {
             rinfo.filepath = request;
             cerr << rinfo.filepath << " this is filepath" << endl;
         }
-        if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
+        if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get) {
             rinfo.http_type = "HTTP/1.0";
             cerr << rinfo.http_type << " this is http_type" << endl;
         }
-        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
+        else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get) {
             rinfo.http_type = "HTTP/1.1";
             cerr << rinfo.http_type << " this is http_type" << endl;
             rinfo.calive = 1;
@@ -353,32 +383,50 @@ void tokenize_line(char* msg, request_struct &rinfo) {
     }
 }
 
+/*
+
+Purpose: The purpose of this function is to tokenize the entire length of the HTTP message line by line
+The function splits the HTTP request by carriage request making a token out of each line.
+Parameters:A char buffer which contains the HTTP request and a sturct that contains all of the HTTP request information)
+Return Value: none
+
+*/
 
 void tokenize_msg(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize" << endl;
+
+    //Check to see if message is complete
     if (strstr(msg, "\r\n\r\n") != NULL) {
         rinfo.done = 1;
     }
     char *request;
     char *rest = msg;
+
+    //parse each line
     request = strtok_r(rest, "\r\n", &rest);
-    while(request != NULL){
+    //parse each line
+    while(request != NULL) {
         cerr << "Processing line token: " << request << endl;
         tokenize_line(request, rinfo);
         request = strtok_r(rest, "\r\n", &rest);
     }
 }
 
+
 /*
 
 Purpose: Establish a new socket for a incoming conncetion and call functions to deal with
-incoming message from socket
+incoming message from socket. Set socketoptions for timing out request if HTTP/1.1 or HTTP request wishes
+to keep connection open.
 Parameters: pointer to a new nocket identifier
 Return value: none
 
 */
+
+
 void *new_connection(void *info) {
 
+	//struct used for implementations of setsocktopt
     struct timeval time;
     time.tv_sec = 40;
     
@@ -386,10 +434,15 @@ void *new_connection(void *info) {
     string rootdir = args->arg1;
     int sock = args->arg2;
     
+    //create struct to hold HTTP request
     request_struct rinfo;
+    
+    //flag that tells us if we want to keep the connection open (HTTP/1.0, HTTP1.1);
     int connection = 1;
-	while(connection){ // right now we are just spinning if we dont close socket, constantly readigng \n
+	
+	while(connection) { // right now we are just spinning if we dont close socket, constantly readigng \n
 
+		//while the HTTP request is still beign sent
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
@@ -399,28 +452,34 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
                 continue;
             }
-            if (strlen(req)) { // if length of message >0
+            // if length of message >0
+            if (strlen(req)) { 
                 tokenize_msg(req, rinfo);
                 prints(rinfo);
             }
+            //else lose connection
             else {
                 DEBUG_PRINT("message of length zero");
                 connection = 0;
             }
         }
 	    
+	    //Tells us that we want to end the connection
 	    if (!handle_request(sock, rootdir, rinfo) && connection == 1) { // if 0 (http1.0) close the socket
 	        connection = 0;
 	    }
         reset_info(rinfo);
+        
+        //simple heuristic for number of connections
         if(connections > 5){
             time.tv_sec = 20;
         }
-        else if(connections > 10){
+        else if(connections > 10) {
             time.tv_sec = 10;
         }
 
         cout << "Number of Connections " << connections << endl;
+        //sets soct options and checks for failure
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket failing");
@@ -433,9 +492,11 @@ void *new_connection(void *info) {
 
         }
 	}
+
 	DEBUG_PRINT("Closing socket\n");
 	close(sock);
    
+   	//edits global value from thread.
     mtx.lock();
     connections--;
     mtx.unlock();
@@ -516,7 +577,7 @@ int main(int argc, char** argv) {
     
     DEBUG_PRINT("opened and bound socket!\n");
     
-    //listedn for upcoming conections
+    //listed for upcoming conections
     if (listen(sock_fd,5) < 0) {
         perror("error on listen!\n");
         return -1;
@@ -524,8 +585,12 @@ int main(int argc, char** argv) {
 
     //Have a while loop that wiats for incoming connections
     while (1) {
+        
+
+        //new connection found
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
         DEBUG_PRINT("Connection found and accepted\n")
+        
         if (new_sock < 0) {
             cerr << "error on accept!\n" << endl;
             return -1;
@@ -535,12 +600,16 @@ int main(int argc, char** argv) {
         connections++;
         mtx.unlock();
         
+        //create new thread and new command line arguments
         pthread_t new_thread;
         struct arg_struct args;
+        
+        //command line arguments
         args.arg1 = rootdir;
         args.arg2 = new_sock;
         
-        if(pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0){
+        //Thread creation check if it fails/
+        if(pthread_create( &new_thread, NULL, new_connection, (void*)&args ) < 0) {
         	cerr << "Thread Creation Failed" << endl;
         	return -1;
     	}
