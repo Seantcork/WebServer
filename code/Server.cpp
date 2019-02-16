@@ -532,7 +532,7 @@ int main(int argc, char** argv) {
             portnum = atoi(optarg);
             break;
         case 'r':
-            rflag = 1;
+            //rflag = 1;
             rootdir = optarg;
             break;
         case '?':
