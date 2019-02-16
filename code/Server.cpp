@@ -64,6 +64,7 @@ struct request_struct {
     int calive = 0;
     int cclose = 0;
     int done = 0;
+    int cHTTP = 0;
 };
 
 void reset_info(request_struct &info){
@@ -74,6 +75,7 @@ void reset_info(request_struct &info){
     info.calive = 0;
     info.cclose = 0;
     info.done = 0;
+    info.cHTTP = 0;
 }
 
 mutex mtx;
@@ -164,6 +166,10 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     } 
     if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
         header = (char*)"400 Bad Request\r\n";
+    }
+    //bad http version string
+    if(!rinfo.cHTTP){
+    	header = (char*)"400 Bad Request\r\n";
     }
 
     else {
@@ -312,12 +318,14 @@ void tokenize_line(char* msg, request_struct &rinfo) {
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get){
             rinfo.http_type = "HTTP/1.0";
+            rinfo.cHTTP = 1;
             cerr << rinfo.http_type << " this is http_type" << endl;
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get){
             rinfo.http_type = "HTTP/1.1";
             cerr << rinfo.http_type << " this is http_type" << endl;
             rinfo.calive = 1;
+            rinfo.cHTTP = 1;
         }
         else if(!strncmp("Connection:", request, strlen("Connection:"))) {
             DEBUG_PRINT("Reading Connection line");
