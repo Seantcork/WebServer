@@ -580,7 +580,7 @@ int main(int argc, char** argv) {
 
 
     
-    DEBUG_PRINT("opened and bound socket!\n");
+    //DEBUG_PRINT("opened and bound socket!\n");
     
     //listedn for upcoming conections
     if(listen(sock_fd,20) < 0) {
