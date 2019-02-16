@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
     
     //literals
     int c, err, portnum, pflag, rflag = 0;
-    char *rootdir = NULL;
+    char *rootdir = '\0';
     int sock_fd, new_sock, clientlen;
     struct sockaddr_in client_addr;
     
