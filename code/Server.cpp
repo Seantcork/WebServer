@@ -95,8 +95,8 @@ string filetype(string path) { //utils
     find = ftypes.find(suffix);
     string filetype;
 
-    //If the file type is not supported by our program raise a flag
-    if (find == ftypes.end()){
+    //ifthe file type is not supported by our program raise a flag
+    if(find == ftypes.end()){
     	filetype = "cant handle request";
     }
     else {
@@ -139,13 +139,13 @@ string get_date() { //utils
 /*
 
 Use: This function takes the message recieved from the socket and the socket number. First it determines
-if the GET request is correctly formated and that the HTTP request is a GET request. It then parses the filepath of
-the HTTP request. If the HTTP request is formatted correctly the function calls Generate Response which generates an
-HTTP message to send. The function then attempts to send the message to the client. If request is HTTP/1.0 it closes
+ifthe GET request is correctly formated and that the HTTP request is a GET request. It then parses the filepath of
+the HTTP request. ifthe HTTP request is formatted correctly the function calls Generate Response which generates an
+HTTP message to send. The function then attempts to send the message to the client. ifrequest is HTTP/1.0 it closes
 the socket. Otherwise the socket is kept open.
 Parameters: Char* msg is the buffer recieved from the socket. Int socket is the identifier for the socket number of the
 request.
-Return value: 1 if http1.1 and good request, otherwise return 0.
+Return value: 1 ifhttp1.1 and good request, otherwise return 0.
 
 */
 
@@ -159,7 +159,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     int goodreq = 0;
 
     const char *header;
-    if(rinfo.get && (rinfo.http_type.empty())) { // if get is bad or neither http req
+    if(rinfo.get && (rinfo.http_type.empty())) { // ifget is bad or neither http req
         header = (char*)"400 Bad Request\r\n";
     } 
     if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
@@ -171,7 +171,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     	//set flag
 		goodreq = 1;
 
-		//if rootdir is not absolute set path to relatiuce directory
+		//ifrootdir is not absolute set path to relatiuce directory
 
         if(rootdir[0] != '/'){
             char directory[100];
@@ -190,15 +190,15 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
         }
 
         reqfile.open(filepath, ios::binary);
-        if (errno == ENOENT || reqfile.fail()) { // file does not exist
+        if(errno == ENOENT || reqfile.fail()) { // file does not exist
             DEBUG_PRINT("File does not exist");
             header = (char*)"404 Not Found\r\n";  
         } 
-        else if (errno == EACCES) { // permission denied
+        else if(errno == EACCES) { // permission denied
             DEBUG_PRINT("Failed read access");
             header = (char*)"403 Forbidden\r\n";
         }
-        else if (!filetype(filepath).compare("cant handle request")) {
+        else if(!filetype(filepath).compare("cant handle request")) {
             DEBUG_PRINT("Incompatable FileExtension");
             header = (char*)"404 Bad Request\r\n";
         }
@@ -242,7 +242,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
-    if (goodfile) {
+    if(goodfile) {
 
         int n = filepath.length();
         char *chars = new char[n+1];
@@ -269,7 +269,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     }
                                          
     // tell to close the socket or not
-    if (rinfo.calive && goodreq) {
+    if(rinfo.calive && goodreq) {
         DEBUG_PRINT("KEEP ALIVE");
         return 1;
 
@@ -338,7 +338,7 @@ void tokenize_line(char* msg, request_struct &rinfo) {
 
 void tokenize_msg(char* msg, request_struct &rinfo) {
     cout << "youve called tokenize" << endl;
-    if (strstr(msg, "\r\n\r\n") != NULL) {
+    if(strstr(msg, "\r\n\r\n") != NULL) {
         rinfo.done = 1;
     }
     char *request;
@@ -349,7 +349,7 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
         tokenize_line(request, rinfo);
         request = strtok_r(rest, "\r\n", &rest);
     }
-    if (!strlen(msg)) {
+    if(!strlen(msg)) {
       rinfo.done = 1;
       return;
     }
@@ -392,21 +392,21 @@ void *new_connection(void *info) {
             int n = recv(sock, req, MAXURI, 0);
             DEBUG_PRINT("MESSAGE RECIEVED: ->%s\n<-", req);
 
-            if (n < 0) {
+            if(n < 0) {
                 cerr << "error on read!/n" << endl;
                 continue;
             }
-            if (strlen(req)) { // if length of message >0
+            if(strlen(req)) { // iflength of message >0
                 tokenize_msg(req, rinfo);
                 prints(rinfo);
             }
             else {
-                DEBUG_PRINT("message of length zero"); // right now we are just spinning if we dont close socket, constantly readigng \n
+                DEBUG_PRINT("message of length zero"); // right now we are just spinning ifwe dont close socket, constantly readigng \n
                 connection = 0;
             }
         }
 	    
-	    if (!handle_request(sock, rootdir, rinfo) && connection == 1) { // if 0 (http1.0) close the socket
+	    if(!handle_request(sock, rootdir, rinfo) && connection == 1) { // if0 (http1.0) close the socket
 	        connection = 0;
 	    }
         reset_info(rinfo);
@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
     
     //literals
     int c, err, portnum, pflag, rflag = 0;
-    char *rootdir = '\0';
+    char *rootdir = "";
     int sock_fd, new_sock, clientlen;
     struct sockaddr_in client_addr;
     
@@ -476,7 +476,7 @@ int main(int argc, char** argv) {
             break;
     }
     //check err flag
-    if (err || !pflag || !rflag) {
+    if(err || !pflag || !rflag) {
         perror("error on commandline");
     }
     
@@ -492,7 +492,7 @@ int main(int argc, char** argv) {
     // if(setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, ))
     
     //make sure sockfd is open
-    if (sock_fd < 0) {
+    if(sock_fd < 0) {
         printf("error opening socket\n");
         return -1;
     }
@@ -504,7 +504,7 @@ int main(int argc, char** argv) {
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     //Bind socket and make sure it is correct
-    if (::bind(sock_fd, (struct sockaddr*) &myaddr, sizeof(myaddr)) < 0) {
+    if(::bind(sock_fd, (struct sockaddr*) &myaddr, sizeof(myaddr)) < 0) {
         printf("error binding socket\n");
         return -1;
     }
@@ -514,7 +514,7 @@ int main(int argc, char** argv) {
     DEBUG_PRINT("opened and bound socket!\n");
     
     //listedn for upcoming conections
-    if (listen(sock_fd,5) < 0) {
+    if(listen(sock_fd,5) < 0) {
         perror("error on listen!\n");
         return -1;
     }
@@ -523,7 +523,7 @@ int main(int argc, char** argv) {
     while (1) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
         DEBUG_PRINT("Connection found and accepted\n")
-        if (new_sock < 0) {
+        if(new_sock < 0) {
             cerr << "error on accept!\n" << endl;
             return -1;
         }
