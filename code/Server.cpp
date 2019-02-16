@@ -92,7 +92,7 @@ of file being requested.
 */
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
-    cout << suffix << endl;
+    // cout << suffix << endl;
     map<string, string>::iterator find;
     find = ftypes.find(suffix);
     string filetype;
@@ -185,7 +185,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
                 cerr << "error getting current working directory" << endl;
             }
             rootdir = (string)directory + "/" + rootdir;
-            cout << rootdir << endl;
+            // cout << rootdir << endl;
         }
         if(filepath.length() == 1 && filepath.compare("/") == 0){
             filepath = "/index.html";
@@ -235,8 +235,8 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
     //send header info
     size_t bytes_left = strlen(header);
-    cout << "this is header" << header << endl;
-    cout << bytes_left << endl;
+    // cout << "this is header" << header << endl;
+    // cout << bytes_left << endl;
     bytes_sent = send(socket, header, strlen(header) ,0);
 	if(bytes_left < 0){
 		cerr << "Errror sending headers" << endl;
@@ -246,7 +246,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 	bytes_left -= bytes_sent;
 
 	while (bytes_left > 0){
-        cout << bytes_left << endl;
+        // cout << bytes_left << endl;
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
@@ -297,7 +297,7 @@ void prints(request_struct &toprint) {
 }
 
 void tokenize_line(char* msg, request_struct &rinfo) {
-    cout << "youve called tokenize Line" << endl;
+    DEBUG_PRINT("youve called tokenize Line");
     char *request;
     char *rest = msg;
     request = strtok_r(rest, " ", &rest);
@@ -347,7 +347,7 @@ void tokenize_line(char* msg, request_struct &rinfo) {
 
 
 void tokenize_msg(char* msg, request_struct &rinfo) {
-    cout << "youve called tokenize" << endl;
+    DEBUG_PRINT("youve called tokenize");
     if(strstr(msg, "\r\n\r\n") != NULL) {
         rinfo.done = 1;
     }
@@ -389,7 +389,7 @@ void *new_connection(void *info) {
          rootdir = (string)directory;
     }
 
-    cout << rootdir << "int rootdir" << endl;
+    // cout << rootdir << "int rootdir" << endl;
     
     int sock = args->arg2;
     
@@ -427,7 +427,7 @@ void *new_connection(void *info) {
             time.tv_sec = 10;
         }
 
-        cout << "Number of Connections " << connections << endl;
+        // cout << "Number of Connections " << connections << endl;
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket 2failing");
@@ -468,7 +468,6 @@ int main(int argc, char** argv) {
     char *rootdir = "";
     int sock_fd, new_sock, clientlen;
     struct sockaddr_in client_addr;
-    
     //Parse command line
     while ((c = getopt (argc, argv, "p:r:")) != -1)
         switch (c)
