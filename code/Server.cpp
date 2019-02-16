@@ -430,6 +430,7 @@ void *new_connection(void *info) {
 
     string rootdir = args->arg1;
     if(rootdir.length() == 0){
+        cout << "in here" << endl;
     	 char directory[100];
          if(getcwd(directory, sizeof(directory)) == NULL){
          	cerr << "error getting current working directory" << endl;
