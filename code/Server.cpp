@@ -33,9 +33,13 @@
 #include <sys/sendfile.h>
 
 //Constants used to define easier printing statmenets
+
 // #define DEBUG_ME 0
+
 // #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
+
 // printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
+
 // fflush(stdout);}
 
 //max request buffer
@@ -586,7 +590,7 @@ int main(int argc, char** argv) {
     //Have a while loop that wiats for incoming connections
     while (1) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
-        DEBUG_PRINT("Connection found and accepted\n")
+        //DEBUG_PRINT("Connection found and accepted\n")
         if(new_sock < 0) {
             cerr << "error on accept!\n" << endl;
             return -1;
