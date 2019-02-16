@@ -32,16 +32,11 @@
 #include <errno.h>
 #include <sys/sendfile.h>
 
-/*Constants used to define easier printing statmenets
-
-// #define DEBUG_ME 0
-
-// #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
-
-// printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
-
+//Constants used to define easier printing statmenets
+#define DEBUG_ME 0
+#define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
+printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 fflush(stdout);}
-*/
 
 //max request buffer
 const int MAXURI = 4000;
@@ -59,7 +54,7 @@ static map<string, string> ftypes = {
 };
 
 struct arg_struct {
-    string arg1;
+    char* arg1;
     int arg2;
 }args;
 
@@ -216,20 +211,20 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
         reqfile.open(filepath, ios::binary);
         if(errno == ENOENT || reqfile.fail()) { // file does not exist
-            //DEBUG_PRINT("File does not exist");
+            DEBUG_PRINT("File does not exist");
             header = (char*)"404 Not Found\r\n";  
         } 
         else if(errno == EACCES) { // permission denied
-            //DEBUG_PRINT("Failed read access");
+            DEBUG_PRINT("Failed read access");
             header = (char*)"403 Forbidden\r\n";
         }
         else if(!filetype(filepath).compare("cant handle request")) {
-            //DEBUG_PRINT("Incompatable FileExtension");
+            DEBUG_PRINT("Incompatable FileExtension");
             header = (char*)"404 Bad Request\r\n";
         }
 
         else {
-            //DEBUG_PRINT("HERE 1");
+            DEBUG_PRINT("HERE 1");
             goodfile = 1;
             string type_of_file = filetype(filepath);
             string status = rinfo.http_type + " 200 OK\r\n";
@@ -286,18 +281,18 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
         bytes_left -= bytes_sent;
 
         while (bytes_left > 0){
-            //DEBUG_PRINT("bytes_sent");
+            DEBUG_PRINT("bytes_sent");
             bytes_sent = sendfile(socket, reqfd, NULL, fsize);
             bytes_left -= bytes_sent;
         }
 
         reqfile.close();
-        //DEBUG_PRINT("wrote header");
+        DEBUG_PRINT("wrote header");
     }
                                          
     // tell to close the socket or not
     if(rinfo.calive && goodreq) {
-        //DEBUG_PRINT("KEEP ALIVE");
+        DEBUG_PRINT("KEEP ALIVE");
         return 1;
 
     } else {
@@ -346,7 +341,7 @@ void tokenize_line(char* msg, request_struct &rinfo) {
     while(request != NULL) {
         cerr << "Processing token: " << request << endl;
         if(!strcmp("GET", request) && pos == 0){
-            //DEBUG_PRINT("Reading GET line");
+            DEBUG_PRINT("Reading GET line");
             get = 1;
             rinfo.get = 1;
         }
@@ -367,7 +362,7 @@ void tokenize_line(char* msg, request_struct &rinfo) {
             rinfo.cHTTP = 1;
         }
         else if(!strncmp("Connection:", request, strlen("Connection:"))) {
-            //DEBUG_PRINT("Reading Connection line");
+            DEBUG_PRINT("Reading Connection line");
             con = 1;
         }
         else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
@@ -525,7 +520,7 @@ int main(int argc, char** argv) {
     
     //literals
     int c, err, portnum, pflag, rflag = 0;
-    string rootdir; 
+    char *rootdir = "";
     int sock_fd, new_sock, clientlen;
     struct sockaddr_in client_addr;
     //Parse command line
@@ -549,7 +544,7 @@ int main(int argc, char** argv) {
         perror("error on commandline");
     }
     
-    //DEBUG_PRINT("portnum %d, rootdir %s", portnum, rootdir);
+    DEBUG_PRINT("portnum %d, rootdir %s", portnum, rootdir);
     
  
     //Setup for socket
@@ -580,7 +575,7 @@ int main(int argc, char** argv) {
 
 
     
-    //DEBUG_PRINT("opened and bound socket!\n");
+    DEBUG_PRINT("opened and bound socket!\n");
     
     //listedn for upcoming conections
     if(listen(sock_fd,20) < 0) {
@@ -591,7 +586,7 @@ int main(int argc, char** argv) {
     //Have a while loop that wiats for incoming connections
     while (1) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
-        //DEBUG_PRINT("Connection found and accepted\n")
+        DEBUG_PRINT("Connection found and accepted\n")
         if(new_sock < 0) {
             cerr << "error on accept!\n" << endl;
             return -1;
