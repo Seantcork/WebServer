@@ -378,6 +378,9 @@ void *new_connection(void *info) {
          }
          rootdir = (string)directory;
     }
+
+    cout << rootdir << "int rootdir" << endl;
+    
     int sock = args->arg2;
     
     request_struct rinfo;
