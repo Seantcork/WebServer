@@ -185,7 +185,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
                 cerr << "error getting current working directory" << endl;
             }
             rootdir = (string)directory + "/" + rootdir;
-            cout << rootdir << endl;
+
         }
         if(filepath.length() == 1 && filepath.compare("/") == 0){
             filepath = "/index.html";
@@ -235,8 +235,6 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
     //send header info
     size_t bytes_left = strlen(header);
-    cout << "this is header" << header << endl;
-    cout << bytes_left << endl;
     bytes_sent = send(socket, header, strlen(header) ,0);
 	if(bytes_left < 0){
 		cerr << "Errror sending headers" << endl;
@@ -246,7 +244,6 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 	bytes_left -= bytes_sent;
 
 	while (bytes_left > 0){
-        cout << bytes_left << endl;
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
@@ -297,7 +294,6 @@ void prints(request_struct &toprint) {
 }
 
 void tokenize_line(char* msg, request_struct &rinfo) {
-    cout << "youve called tokenize Line" << endl;
     char *request;
     char *rest = msg;
     request = strtok_r(rest, " ", &rest);
@@ -347,7 +343,6 @@ void tokenize_line(char* msg, request_struct &rinfo) {
 
 
 void tokenize_msg(char* msg, request_struct &rinfo) {
-    cout << "youve called tokenize" << endl;
     if(strstr(msg, "\r\n\r\n") != NULL) {
         rinfo.done = 1;
     }
