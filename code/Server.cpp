@@ -35,8 +35,7 @@
 //Constants used to define easier printing statmenets
 #define DEBUG_ME 0
 #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
-printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
-fflush(stdout);}
+//fflush(stdout);}
 
 //max request buffer
 const int MAXURI = 4000;
@@ -54,7 +53,7 @@ static map<string, string> ftypes = {
 };
 
 struct arg_struct {
-    char* arg1;
+    string arg1;
     int arg2;
 }args;
 
