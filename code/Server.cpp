@@ -376,7 +376,7 @@ void *new_connection(void *info) {
          if(getcwd(directory, sizeof(directory)) == NULL){
          	cerr << "error getting current working directory" << endl;
          }
-         rootdir = (stirng)directory;
+         rootdir = (string)directory;
     }
     int sock = args->arg2;
     
