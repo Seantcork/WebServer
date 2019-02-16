@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
     
     //literals
     int c, err, portnum, pflag, rflag = 0;
-    char *rootdir;
+    char rootdir[100] = "";
     int sock_fd, new_sock, clientlen;
     struct sockaddr_in client_addr;
     
@@ -534,7 +534,6 @@ int main(int argc, char** argv) {
         
         pthread_t new_thread;
         struct arg_struct args;
-        cout << rootdir << "this is rootdir" << endl;
         args.arg1 = rootdir;
         args.arg2 = new_sock;
         
