@@ -185,7 +185,8 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     if(rinfo.get && (rinfo.http_type.empty())) {
         header = (char*)"400 Bad Request\r\n";
     } 
-    if(rinfo.http_type.back() == '1' && !(rinfo.cclose || rinfo.calive)) {
+    //If HTTP/1.1 doesnt have host header
+    if(rinfo.http_type.back() == '1' && !(rinfo.host) {
         header = (char*)"400 Bad Request\r\n";
     }
 
