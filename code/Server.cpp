@@ -181,7 +181,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
             rootdir = (string)directory + "/" + rootdir;
             cout << rootdir << endl;
         }
-        if( filepath[0].compare("/") == 0){
+        if(filepath[0]== '/'){
             filepath += "index.html";
             filepath = rootdir + filepath;
         }
