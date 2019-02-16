@@ -291,7 +291,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     }
                                          
     // tell to close the socket or not
-    if(rinfo.calive && goodreq) {
+    if(rinfo.calive && goodreq && !rinfo.cclose) {
         DEBUG_PRINT("KEEP ALIVE");
         return 1;
 
