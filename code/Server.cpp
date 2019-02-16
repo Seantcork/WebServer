@@ -33,8 +33,8 @@
 #include <sys/sendfile.h>
 
 //Constants used to define easier printing statmenets
-#define DEBUG_ME 0
-#define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
+//#define DEBUG_ME 0
+//#define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
 //fflush(stdout);}
 
 //max request buffer
