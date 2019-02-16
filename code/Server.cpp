@@ -33,10 +33,10 @@
 #include <sys/sendfile.h>
 
 //Constants used to define easier printing statmenets
-#define DEBUG_ME 0
-#define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
-printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
-fflush(stdout);}
+// #define DEBUG_ME 0
+// #define DEBUG_PRINT(format, ...) if(DEBUG_ME) {\
+// printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
+// fflush(stdout);}
 
 //max request buffer
 const int MAXURI = 4000;
