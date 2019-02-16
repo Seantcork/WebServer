@@ -229,7 +229,6 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
     //send header info
     size_t bytes_left = strlen(header);
-    cout << header << "this is header" << endl;
     bytes_sent = send(socket, header, strlen(header) ,0);
 	if(bytes_left < 0){
 		cerr << "Errror sending headers" << endl;
