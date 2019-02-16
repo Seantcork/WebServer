@@ -438,7 +438,6 @@ void *new_connection(void *info) {
     }
 
     // cout << rootdir << "int rootdir" << endl;
-    
     int sock = args->arg2;
     
     request_struct rinfo;
@@ -452,7 +451,7 @@ void *new_connection(void *info) {
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            DEBUG_PRINT("MESSAGE RECIEVED: ->%s\n<-", req);
+            //DEBUG_PRINT("MESSAGE RECIEVED: ->%s\n<-", req);
 
             if(n < 0) {
                 cerr << "error on read!/n" << endl;
@@ -463,7 +462,7 @@ void *new_connection(void *info) {
                 prints(rinfo);
             }
             else {
-                DEBUG_PRINT("message of length zero"); // right now we are just spinning ifwe dont close socket, constantly readigng \n
+                //DEBUG_PRINT("message of length zero"); // right now we are just spinning ifwe dont close socket, constantly readigng \n
                 connection = 0;
             }
         }
@@ -496,7 +495,7 @@ void *new_connection(void *info) {
 
         }
 	}
-	DEBUG_PRINT("Closing socket\n");
+	//DEBUG_PRINT("Closing socket\n");
 	close(sock);
    
     mtx.lock();
