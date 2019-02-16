@@ -196,6 +196,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 		goodreq = 1;
 
 		//if rootdir is not absolute set path to relatiuce directory
+
         if(rootdir[0] != '/'){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
@@ -432,7 +433,15 @@ void *new_connection(void *info) {
     time.tv_sec = 40;
     
     struct arg_struct *args = (struct arg_struct *)info;
+
     string rootdir = args->arg1;
+    if(rootdir.length() == 0){
+    	 char directory[100];
+         if(getcwd(directory, sizeof(directory)) == NULL){
+         	cerr << "error getting current working directory" << endl;
+         }
+         rootdir = (stirng)directory;
+    }
     int sock = args->arg2;
     
     //create struct to hold HTTP request
