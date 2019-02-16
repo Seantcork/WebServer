@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <sys/sendfile.h>
 
-//Constants used to define easier printing statmenets
+/*Constants used to define easier printing statmenets
 
 // #define DEBUG_ME 0
 
@@ -40,7 +40,8 @@
 
 // printf("%s:%d -> " format "\n", __FUNCTION__, __LINE__, ## __VA_ARGS__);\
 
-// fflush(stdout);}
+fflush(stdout);}
+*/
 
 //max request buffer
 const int MAXURI = 4000;
@@ -548,7 +549,7 @@ int main(int argc, char** argv) {
         perror("error on commandline");
     }
     
-    DEBUG_PRINT("portnum %d, rootdir %s", portnum, rootdir);
+    //DEBUG_PRINT("portnum %d, rootdir %s", portnum, rootdir);
     
  
     //Setup for socket
