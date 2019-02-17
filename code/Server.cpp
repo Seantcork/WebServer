@@ -54,7 +54,7 @@ static map<string, string> ftypes = {
 };
 
 struct arg_struct {
-    string* arg1;
+    string arg1;
     int arg2;
 }args;
 
