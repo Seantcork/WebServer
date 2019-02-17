@@ -535,7 +535,6 @@ int main(int argc, char** argv) {
         case 'r':
             //rflag = 1;
             rootdir = optarg;
-            cout << "this is rootdir" << endl;
             break;
         case '?':
             err = 1;
