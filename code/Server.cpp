@@ -341,7 +341,6 @@ void tokenize_line(char* msg, request_struct &rinfo) {
 
     //while still tokens
     while(request != NULL) {
-        cerr << "Processing token: " << request << endl;
         if(!strcmp("GET", request) && pos == 0){
             //DEBUG_PRINT("Reading GET line");
             get = 1;
@@ -350,16 +349,13 @@ void tokenize_line(char* msg, request_struct &rinfo) {
         //get filepath
         else if(pos == 1 && get) {
             rinfo.filepath = request;
-            cerr << rinfo.filepath << " this is filepath" << endl;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get) {
             rinfo.http_type = "HTTP/1.0";
             rinfo.cHTTP = 1;
-            cerr << rinfo.http_type << " this is http_type" << endl;
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get) {
             rinfo.http_type = "HTTP/1.1";
-            cerr << rinfo.http_type << " this is http_type" << endl;
             rinfo.calive = 1;
             rinfo.cHTTP = 1;
         }
@@ -403,7 +399,6 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     //parse each line
     request = strtok_r(rest, "\r\n", &rest);
     while(request != NULL){
-        cerr << "Processing line token: " << request << endl;
         tokenize_line(request, rinfo);
         request = strtok_r(rest, "\r\n", &rest);
     }
