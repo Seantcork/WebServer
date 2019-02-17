@@ -1,9 +1,20 @@
-// 
-//  ServerProgram.cpp
-//
-//
-//  Created by Ian Squiers & Sean Cork on 1/30/19.
-//
+/* 
+
+Created by Ian Squiers & Sean Cork on 1/30/19.
+
+This program is an implementatin of a server side client that Handles HTTP requests. This
+Program works by first opening and binding a socket then listening and accepting connections. This program
+contains functions to make sure the HTTP request being sent is valid and returns then approriate messages.
+This program was designed to only handle HTTP GET requests in HTTP/1.0 and HTTP/1.1. The program only supports the 
+following file formats: .jpg, .html, .gif and .txt. The program works first by estabilishing
+a new connection and creating a thread to parse and handle the HTTP request. The function that parses the request is used
+to check if the HTTP request has the correct headers and is formated correctly. After 
+determining the HTTP requests correctness. The program attempts to send the requested file to the client.
+After determinign that everything is sent the program checks to see if the HTTP request, requested to keep 
+the connection open or not. If the connection is to be closed the server closes the socket and waits for more
+connections.
+
+*/
 
 
 //#include "Server.hpp"
