@@ -1,8 +1,7 @@
 /* 
-
 Created by Ian Squiers & Sean Cork on 1/30/19.
 
-This program is an implementatin of a server side client that Handles HTTP requests. This
+This program is an implementation of a server side client that Handles HTTP requests. This
 Program works by first opening and binding a socket then listening and accepting connections. This program
 contains functions to make sure the HTTP request being sent is valid and returns then approriate messages.
 This program was designed to only handle HTTP GET requests in HTTP/1.0 and HTTP/1.1. The program only supports the 
@@ -13,6 +12,7 @@ determining the HTTP requests correctness. The program attempts to send the requ
 After determinign that everything is sent the program checks to see if the HTTP request, requested to keep 
 the connection open or not. If the connection is to be closed the server closes the socket and waits for more
 connections.
+
 
 */
 
@@ -101,7 +101,6 @@ of file being requested.
 */
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
-    // cout << suffix << endl;
     map<string, string>::iterator find;
     find = ftypes.find(suffix);
     string filetype;
@@ -124,8 +123,7 @@ Return value: int that is the size of the file
 
 */
 
-int get_file_size(std::string filename) // path to file
-{
+int get_file_size(std::string filename) { // path to file
     FILE *p_file = NULL;
     p_file = fopen(filename.c_str(),"rb");
     fseek(p_file,0,SEEK_END);
@@ -197,15 +195,13 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     	//set flag
 		goodreq = 1;
 
-		//ifrootdir is not absolute set path to relatiuce directory
-
+		//if rootdir is not absolute set path to relatiuce directory
         if(rootdir[0] != '/'){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
                 cerr << "error getting current working directory" << endl;
             }
             rootdir = (string)directory + "/" + rootdir;
-            // cout << rootdir << endl;
         }
         //if filepath is just a backline fetch index.html
         if(filepath.length() == 1 && filepath.compare("/") == 0){
@@ -256,8 +252,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
     //send header info
     size_t bytes_left = strlen(header);
-    // cout << "this is header" << header << endl;
-    // cout << bytes_left << endl;
+    
     bytes_sent = send(socket, header, strlen(header) ,0);
 	if(bytes_left < 0){
 		cerr << "Errror sending headers" << endl;
@@ -266,8 +261,8 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
 	bytes_left -= bytes_sent;
 
+   //if it hasnt sent all the message
 	while (bytes_left > 0){
-        // cout << bytes_left << endl;
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
@@ -437,7 +432,6 @@ void *new_connection(void *info) {
 
     string rootdir = args->arg1;
     if(rootdir.length() == 0){
-        cout << "in here" << endl;
     	 char directory[100];
          if(getcwd(directory, sizeof(directory)) == NULL){
          	cerr << "error getting current working directory" << endl;
@@ -445,7 +439,6 @@ void *new_connection(void *info) {
          rootdir = (string)directory;
     }
 
-    // cout << rootdir << "int rootdir" << endl;
     int sock = args->arg2;
     
     request_struct rinfo;
@@ -488,8 +481,6 @@ void *new_connection(void *info) {
         else if(connections > 10){
             time.tv_sec = 10;
         }
-
-        // cout << "Number of Connections " << connections << endl;
 
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
