@@ -455,7 +455,7 @@ void *new_connection(void *info) {
             }
             if(strlen(req)) { // iflength of message >0
                 tokenize_msg(req, rinfo);
-                prints(rinfo);
+                //prints(rinfo);
             }
             else {
                 //DEBUG_PRINT("message of length zero"); // right now we are just spinning ifwe dont close socket, constantly readigng \n
