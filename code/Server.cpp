@@ -54,7 +54,7 @@ static map<string, string> ftypes = {
 };
 
 struct arg_struct {
-    char* arg1;
+    string* arg1;
     int arg2;
 }args;
 
@@ -521,7 +521,7 @@ int main(int argc, char** argv) {
     
     //literals
     int c, err, portnum, pflag, rflag = 0;
-    char *rootdir = "";
+    string rootdir = "";
     int sock_fd, new_sock, clientlen;
     struct sockaddr_in client_addr;
     //Parse command line
@@ -535,6 +535,7 @@ int main(int argc, char** argv) {
         case 'r':
             //rflag = 1;
             rootdir = optarg;
+            cout << "this is rootdir" << endl;
             break;
         case '?':
             err = 1;
