@@ -539,7 +539,7 @@ int main(int argc, char** argv) {
         perror("error on commandline");
     }
     
-     cout << "portnum , rootdir " + portnum " " + rootdir << endl;
+     cout << "portnum , rootdir " << portnum " " << rootdir << endl;
     
  
     //Setup for socket
@@ -581,7 +581,7 @@ int main(int argc, char** argv) {
     //Have a while loop that wiats for incoming connections
     while (1) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
-        cout << "Connection found and accepted\n")
+        cout << "Connection found and accepted\n" << endl;
         if(new_sock < 0) {
             cerr << "error on accept!\n" << endl;
             return -1;
