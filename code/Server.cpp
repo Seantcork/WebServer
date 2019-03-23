@@ -448,7 +448,7 @@ void *new_connection(void *info) {
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            cout << "MESSAGE RECIEVED:" << endl;
+            cout << "MESSAGE RECIEVED:" << req << endl;
 
             if(n < 0) {
                 cerr << "error on read!/n" << endl;
@@ -459,6 +459,7 @@ void *new_connection(void *info) {
                 //prints(rinfo);
             }
             else {
+            	cout << rootdir << endl;
                 cout << "message of length zero" << endl; // right now we are just spinning ifwe dont close socket, constantly readigng \n
                 connection = 0;
             }
@@ -539,7 +540,7 @@ int main(int argc, char** argv) {
         perror("error on commandline");
     }
     
-     cout << "portnum , rootdir " << portnum " " << rootdir << endl;
+     cout << "portnum , rootdir " << portnum << " " << rootdir << endl;
     
  
     //Setup for socket
