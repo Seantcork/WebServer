@@ -428,6 +428,7 @@ void *new_connection(void *info) {
 
     string rootdir = args->arg1;
     if(rootdir.length() == 0){
+    	cerr << "getting current directoy" << endl;
     	 char directory[100];
          if(getcwd(directory, sizeof(directory)) == NULL){
          	cerr << "error getting current working directory" << endl;
@@ -436,7 +437,7 @@ void *new_connection(void *info) {
     }
 
     int sock = args->arg2;
-    
+    cerr << rootdir << "int rootdir" << endl;
     request_struct rinfo;
 
     //flag that tells us if we want to keep the connection open (HTTP/1.0, HTTP1.1);
@@ -448,7 +449,8 @@ void *new_connection(void *info) {
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            cout << "MESSAGE RECIEVED:" << req << endl;
+            cerr << "MESSAGE RECIEVED:" << req  << strlen(req) << endl;
+            cerr << "This is dirrectory" << rootdir << endl;
 
             if(n < 0) {
                 cerr << "error on read!/n" << endl;
@@ -456,10 +458,9 @@ void *new_connection(void *info) {
             }
             if(strlen(req)) { // iflength of message >0
                 tokenize_msg(req, rinfo);
-                //prints(rinfo);
+                prints(rinfo);
             }
             else {
-            	cout << rootdir << endl;
                 cout << "message of length zero" << endl; // right now we are just spinning ifwe dont close socket, constantly readigng \n
                 connection = 0;
             }
