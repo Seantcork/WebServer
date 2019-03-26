@@ -394,6 +394,7 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
 
 
     //Check to see if message is complete
+    cout << strlen(msg) << "length of message in tokenize" << endl;
     if(strlen(msg) == 2) {
         rinfo.done = 1;
         return;
