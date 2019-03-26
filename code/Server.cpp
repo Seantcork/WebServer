@@ -396,6 +396,7 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     //Check to see if message is complete
     if(strlen(msg) == 2) {
         rinfo.done = 1;
+        return;
     }
     char *request;
     char *rest = msg;
