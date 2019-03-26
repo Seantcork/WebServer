@@ -75,7 +75,9 @@ struct request_struct {
     int cclose = 0;
     int done = 0;
     int cHTTP = 0;
+    int almostdone = 0;
 };
+
 
 void reset_info(request_struct &info) {
     info.get = 0;
@@ -86,6 +88,7 @@ void reset_info(request_struct &info) {
     info.cclose = 0;
     info.done = 0;
     info.cHTTP = 0;
+    info.almostdone = 0;
 }
 
 mutex mtx;
@@ -388,12 +391,6 @@ Return Value: none
 */
 
 void tokenize_msg(char* msg, request_struct &rinfo) {
-
-
-    //Check to see if message is complete
-    if(strstr(msg, "\r\n\r\n") != NULL) {
-        rinfo.done = 1;
-    }
     char *request;
     char *rest = msg;
 
@@ -402,6 +399,7 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     while(request != NULL){
         tokenize_line(request, rinfo);
         request = strtok_r(rest, "\r\n", &rest);
+	rinfo.almostdone = 0;
     }
     if(!strlen(msg)) {
       rinfo.done = 1;
@@ -442,13 +440,14 @@ void *new_connection(void *info) {
 
     //flag that tells us if we want to keep the connection open (HTTP/1.0, HTTP1.1);
     int connection = 1;
-	while(connection){ 
+    while(connection){ 
 
 
 		//while the HTTP request is still beign sent
-        while(!rinfo.done) {
-            char req[MAXREQ] = {0};
-            int n = recv(sock, req, MAXURI, 0);
+	char buff[MAXREQ] = {0};	
+        char req[MAXREQ] = {0};
+        while(strstr(req, "\r\n\r\n") == NULL){
+            int n = recv(sock, buff, MAXURI, 0);
             cerr << "MESSAGE RECIEVED:" << req  << strlen(req) << endl;
             cerr << "This is dirrectory" << rootdir << endl;
 
@@ -456,18 +455,12 @@ void *new_connection(void *info) {
                 cerr << "error on read!/n" << endl;
                 continue;
             }
-            if(strlen(req)) { // iflength of message >0
-                tokenize_msg(req, rinfo);
-                prints(rinfo);
-            }
-            else {
-                cout << "message of length zero" << endl; // right now we are just spinning ifwe dont close socket, constantly readigng \n
-                connection = 0;
-            }
-        }
-	    
+           strncat(req,buff,MAXREQ-strlen(req)-1); //-1 for null-termination
+	}
+	tokenize_msg(req, rinfo);
+		    
 	     //Tells us that we want to end the connection
-	    if(!handle_request(sock, rootdir, rinfo) && connection == 1) { // if0 (http1.0) close the socket
+	if(!handle_request(sock, rootdir, rinfo) && connection == 1) { // if0 (http1.0) close the socket
 	        connection = 0;
 	    }
         reset_info(rinfo);
@@ -491,7 +484,7 @@ void *new_connection(void *info) {
             }
 
         }
-	}
+    }
 	cout << "Closing socket\n" << endl;
 	close(sock);
    
