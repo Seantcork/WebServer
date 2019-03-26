@@ -398,7 +398,7 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     //     rinfo.done = 1;
     // }
     if(strlen(msg) == 4){
-        ring.done =1;
+        rinfo.done =1;
     }
     char *request;
     char *rest = msg;
