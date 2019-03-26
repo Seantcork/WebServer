@@ -167,6 +167,7 @@ Return value: 1 ifhttp1.1 and good request, otherwise return 0.
 */
 
 int handle_request(int socket, string rootdir, request_struct &rinfo) {
+	cerr << "get Here" << endl;
     
     //flags
     size_t fsize;
@@ -343,7 +344,7 @@ void tokenize_line(char* msg, request_struct &rinfo) {
     //while still tokens
     while(request != NULL) {
         if(!strcmp("GET", request) && pos == 0){
-            cout << "Reading GET line" << endl;
+            cerr << "Reading GET line" << endl;
             get = 1;
             rinfo.get = 1;
         }
@@ -361,7 +362,7 @@ void tokenize_line(char* msg, request_struct &rinfo) {
             rinfo.cHTTP = 1;
         }
         else if(!strncmp("Connection:", request, strlen("Connection:"))) {
-            cout << "Reading Connection line" << endl;
+            cerr << "Reading Connection line" << endl;
             con = 1;
         }
         else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
@@ -390,9 +391,14 @@ Return Value: none
 void tokenize_msg(char* msg, request_struct &rinfo) {
 
 
+
+
     //Check to see if message is complete
-    if(strstr(msg, "\r\n\r\n") != NULL) {
-        rinfo.done = 1;
+    // if(strstr(msg, "\r\n\r\n") != NULL) {
+    //     rinfo.done = 1;
+    // }
+    if(strlen(msg) == 4){
+        ring.done =1;
     }
     char *request;
     char *rest = msg;
@@ -433,6 +439,7 @@ void *new_connection(void *info) {
          if(getcwd(directory, sizeof(directory)) == NULL){
          	cerr << "error getting current working directory" << endl;
          }
+         cerr << directory << endl;
          rootdir = (string)directory;
     }
 
