@@ -1,8 +1,7 @@
 /* 
-
 Created by Ian Squiers & Sean Cork on 1/30/19.
 
-This program is an implementatin of a server side client that Handles HTTP requests. This
+This program is an implementation of a server side client that Handles HTTP requests. This
 Program works by first opening and binding a socket then listening and accepting connections. This program
 contains functions to make sure the HTTP request being sent is valid and returns then approriate messages.
 This program was designed to only handle HTTP GET requests in HTTP/1.0 and HTTP/1.1. The program only supports the 
@@ -13,6 +12,7 @@ determining the HTTP requests correctness. The program attempts to send the requ
 After determinign that everything is sent the program checks to see if the HTTP request, requested to keep 
 the connection open or not. If the connection is to be closed the server closes the socket and waits for more
 connections.
+
 
 */
 
@@ -50,6 +50,7 @@ const int MAXURI = 4000;
 const int MAXREQ = 4000;
 
 using namespace std;
+
 
 
 //utils
@@ -101,7 +102,6 @@ of file being requested.
 */
 string filetype(string path) { //utils
     string suffix = path.substr(path.find_last_of("."));
-    // cout << suffix << endl;
     map<string, string>::iterator find;
     find = ftypes.find(suffix);
     string filetype;
@@ -124,8 +124,7 @@ Return value: int that is the size of the file
 
 */
 
-int get_file_size(std::string filename) // path to file
-{
+int get_file_size(std::string filename) { // path to file
     FILE *p_file = NULL;
     p_file = fopen(filename.c_str(),"rb");
     fseek(p_file,0,SEEK_END);
@@ -197,15 +196,13 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
     	//set flag
 		goodreq = 1;
 
-		//ifrootdir is not absolute set path to relatiuce directory
-
+		//if rootdir is not absolute set path to relatiuce directory
         if(rootdir[0] != '/'){
             char directory[100];
             if(getcwd(directory, sizeof(directory)) == NULL){
                 cerr << "error getting current working directory" << endl;
             }
             rootdir = (string)directory + "/" + rootdir;
-            // cout << rootdir << endl;
         }
         //if filepath is just a backline fetch index.html
         if(filepath.length() == 1 && filepath.compare("/") == 0){
@@ -218,20 +215,20 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
         reqfile.open(filepath, ios::binary);
         if(errno == ENOENT || reqfile.fail()) { // file does not exist
-            //DEBUG_PRINT("File does not exist");
+            cout << "File does not exist" << endl;;
             header = (char*)"404 Not Found\r\n";  
         } 
         else if(errno == EACCES) { // permission denied
-            //DEBUG_PRINT("Failed read access");
+            cout << "Failed read access" << endl;;
             header = (char*)"403 Forbidden\r\n";
         }
         else if(!filetype(filepath).compare("cant handle request")) {
-            //DEBUG_PRINT("Incompatable FileExtension");
+            cout << "Incompatable FileExtension" << endl;;
             header = (char*)"404 Bad Request\r\n";
         }
 
         else {
-            //DEBUG_PRINT("HERE 1");
+            cout << "HERE 1" << endl;
             goodfile = 1;
             string type_of_file = filetype(filepath);
             string status = rinfo.http_type + " 200 OK\r\n";
@@ -256,8 +253,7 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
     //send header info
     size_t bytes_left = strlen(header);
-    // cout << "this is header" << header << endl;
-    // cout << bytes_left << endl;
+    
     bytes_sent = send(socket, header, strlen(header) ,0);
 	if(bytes_left < 0){
 		cerr << "Errror sending headers" << endl;
@@ -266,8 +262,8 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
 
 	bytes_left -= bytes_sent;
 
+   //if it hasnt sent all the message
 	while (bytes_left > 0){
-        // cout << bytes_left << endl;
 		bytes_sent = send(socket, header, bytes_left, 0);
 		bytes_left -= bytes_sent;
 	}
@@ -288,18 +284,18 @@ int handle_request(int socket, string rootdir, request_struct &rinfo) {
         bytes_left -= bytes_sent;
 
         while (bytes_left > 0){
-            //DEBUG_PRINT("bytes_sent");
+            cout << "bytes_sent" << endl;
             bytes_sent = sendfile(socket, reqfd, NULL, fsize);
             bytes_left -= bytes_sent;
         }
 
         reqfile.close();
-        //DEBUG_PRINT("wrote header");
+        cout << "wrote header" << endl;
     }
                                          
     // tell to close the socket or not
     if(rinfo.calive && goodreq) {
-        //DEBUG_PRINT("KEEP ALIVE");
+        cout << "KEEP ALIVE" << endl;
         return 1;
 
     } else {
@@ -346,30 +342,26 @@ void tokenize_line(char* msg, request_struct &rinfo) {
 
     //while still tokens
     while(request != NULL) {
-        cerr << "Processing token: " << request << endl;
         if(!strcmp("GET", request) && pos == 0){
-            //DEBUG_PRINT("Reading GET line");
+            cout << "Reading GET line" << endl;
             get = 1;
             rinfo.get = 1;
         }
         //get filepath
         else if(pos == 1 && get) {
             rinfo.filepath = request;
-            cerr << rinfo.filepath << " this is filepath" << endl;
         }
         if(!strncmp("HTTP/1.0", request, strlen("HTTP/1.0")) && pos == 2 && get) {
             rinfo.http_type = "HTTP/1.0";
             rinfo.cHTTP = 1;
-            cerr << rinfo.http_type << " this is http_type" << endl;
         }
         else if(!strncmp("HTTP/1.1", request, strlen("HTTP/1.1")) && pos == 2 && get) {
             rinfo.http_type = "HTTP/1.1";
-            cerr << rinfo.http_type << " this is http_type" << endl;
             rinfo.calive = 1;
             rinfo.cHTTP = 1;
         }
         else if(!strncmp("Connection:", request, strlen("Connection:"))) {
-            //DEBUG_PRINT("Reading Connection line");
+            cout << "Reading Connection line" << endl;
             con = 1;
         }
         else if(!strncmp("Keep-Alive", request, strlen("Keep-Alive")) && con) {
@@ -408,7 +400,6 @@ void tokenize_msg(char* msg, request_struct &rinfo) {
     //parse each line
     request = strtok_r(rest, "\r\n", &rest);
     while(request != NULL){
-        cerr << "Processing line token: " << request << endl;
         tokenize_line(request, rinfo);
         request = strtok_r(rest, "\r\n", &rest);
     }
@@ -437,7 +428,7 @@ void *new_connection(void *info) {
 
     string rootdir = args->arg1;
     if(rootdir.length() == 0){
-        cout << "in here" << endl;
+    	cerr << "getting current directoy" << endl;
     	 char directory[100];
          if(getcwd(directory, sizeof(directory)) == NULL){
          	cerr << "error getting current working directory" << endl;
@@ -445,9 +436,8 @@ void *new_connection(void *info) {
          rootdir = (string)directory;
     }
 
-    // cout << rootdir << "int rootdir" << endl;
     int sock = args->arg2;
-    
+    cerr << rootdir << "int rootdir" << endl;
     request_struct rinfo;
 
     //flag that tells us if we want to keep the connection open (HTTP/1.0, HTTP1.1);
@@ -459,7 +449,8 @@ void *new_connection(void *info) {
         while(!rinfo.done) {
             char req[MAXREQ] = {0};
             int n = recv(sock, req, MAXURI, 0);
-            //DEBUG_PRINT("MESSAGE RECIEVED: ->%s\n<-", req);
+            cerr << "MESSAGE RECIEVED:" << req  << strlen(req) << endl;
+            cerr << "This is dirrectory" << rootdir << endl;
 
             if(n < 0) {
                 cerr << "error on read!/n" << endl;
@@ -470,7 +461,7 @@ void *new_connection(void *info) {
                 prints(rinfo);
             }
             else {
-                //DEBUG_PRINT("message of length zero"); // right now we are just spinning ifwe dont close socket, constantly readigng \n
+                cout << "message of length zero" << endl; // right now we are just spinning ifwe dont close socket, constantly readigng \n
                 connection = 0;
             }
         }
@@ -489,8 +480,6 @@ void *new_connection(void *info) {
             time.tv_sec = 10;
         }
 
-        // cout << "Number of Connections " << connections << endl;
-
         if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)(&time), sizeof(struct timeval)) < 0){
             cerr << "set sock options failing." << endl;
             perror("socket 2failing");
@@ -503,7 +492,7 @@ void *new_connection(void *info) {
 
         }
 	}
-	//DEBUG_PRINT("Closing socket\n");
+	cout << "Closing socket\n" << endl;
 	close(sock);
    
     mtx.lock();
@@ -552,7 +541,7 @@ int main(int argc, char** argv) {
         perror("error on commandline");
     }
     
-    //DEBUG_PRINT("portnum %d, rootdir %s", portnum, rootdir);
+     cout << "portnum , rootdir " << portnum << " " << rootdir << endl;
     
  
     //Setup for socket
@@ -583,7 +572,7 @@ int main(int argc, char** argv) {
 
 
     
-    //DEBUG_PRINT("opened and bound socket!\n");
+    cout << "opened and bound socket!\n" << endl;
     
     //listedn for upcoming conections
     if(listen(sock_fd,20) < 0) {
@@ -594,7 +583,7 @@ int main(int argc, char** argv) {
     //Have a while loop that wiats for incoming connections
     while (1) {
         new_sock = accept(sock_fd, (struct sockaddr *) &client_addr, (socklen_t*) &clientlen);
-        //DEBUG_PRINT("Connection found and accepted\n")
+        cout << "Connection found and accepted\n" << endl;
         if(new_sock < 0) {
             cerr << "error on accept!\n" << endl;
             return -1;
