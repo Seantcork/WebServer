@@ -450,9 +450,6 @@ void *new_connection(void *info) {
         char req[MAXREQ] = {0};
         while(strstr(req, "\r\n\r\n") == NULL){
             int n = recv(sock, buff, MAXURI, 0);
-            cerr << "MESSAGE RECIEVED:" << req  << strlen(req) << endl;
-            cerr << "This is dirrectory" << rootdir << endl;
-
             if(n < 0) {
                 cerr << "error on read!/n" << endl;
                 continue;
